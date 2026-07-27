@@ -71,9 +71,6 @@ export default function SceneNightGarden() {
             edge against scene 5), then the scrim thins toward the bottom —
             the page ends on the table at its brightest (user direction) */}
         <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(107,74,46,1)_0%,rgba(107,74,46,0.55)_12%,rgba(107,74,46,0.15)_28%,rgba(18,11,5,0.32)_52%,rgba(18,11,5,0.18)_100%)]" />
-        {/* Quiet pool of shadow behind the center column only — keeps the
-            practical details legible without darkening the photo's edges */}
-        <div className="absolute inset-0 bg-[radial-gradient(58%_40%_at_50%_60%,rgba(18,11,5,0.5)_0%,rgba(18,11,5,0)_100%)]" />
       </div>
 
       <div className="relative z-10 mx-auto flex min-h-svh max-w-2xl flex-col items-center justify-center px-6 py-28 text-center sm:py-36">
@@ -94,12 +91,14 @@ export default function SceneNightGarden() {
           will do the rest.
         </p>
 
-        {/* Visual-only widget: plain GET form → /reservation?date=…&guests=… */}
-        <form
+        {/* One glass card: widget + practical details, so the text reads
+            over the bright table without dimming the photo */}
+        <div
           data-night-reveal
-          action="/reservation"
           className="mt-12 w-full max-w-md border border-gold/25 bg-black/30 p-6 backdrop-blur-sm sm:p-7"
         >
+        {/* Visual-only widget: plain GET form → /reservation?date=…&guests=… */}
+        <form action="/reservation">
           <div className="flex flex-col gap-4 sm:flex-row">
             <label className="flex-1 text-left">
               <span className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-gold">
@@ -137,10 +136,7 @@ export default function SceneNightGarden() {
         </form>
 
         {/* Practical details — all PLACEHOLDER until confirmed */}
-        <div
-          data-night-reveal
-          className="mt-14 grid w-full max-w-md grid-cols-1 gap-6 text-center sm:grid-cols-3"
-        >
+        <div className="mt-7 grid grid-cols-1 gap-6 border-t border-gold/15 pt-6 text-center sm:grid-cols-3">
           <div>
             <p className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-gold/80">
               Find us
@@ -173,10 +169,7 @@ export default function SceneNightGarden() {
         </div>
 
         {/* Family circle — links pending (PLACEHOLDER hrefs) */}
-        <p
-          data-night-reveal
-          className="mt-10 font-sans text-[0.6875rem] tracking-[0.2em] uppercase text-cream/60"
-        >
+        <p className="mt-7 text-center font-sans text-[0.6875rem] tracking-[0.2em] uppercase text-cream/70">
           Join the family circle &mdash;{" "}
           <a
             href="#"
@@ -192,6 +185,7 @@ export default function SceneNightGarden() {
             LINE
           </a>
         </p>
+        </div>
 
         <div data-night-reveal className="mt-16 flex flex-col items-center gap-4">
           <Image
