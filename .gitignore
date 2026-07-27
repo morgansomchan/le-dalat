@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Original source videos (70-165MB each; GitHub rejects files >100MB).
+# The site uses the small *-web.mp4 cuts, which ARE committed.
+/public/web_assets/videos/Copy of*

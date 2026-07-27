@@ -1,26 +1,72 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/*
+ * Le Dalat design tokens — design_brief.md §4.
+ * The page travels: act one lives on navy, act two on dark warm brown.
+ * Both grounds are canon.
+ */
+@theme {
+  /* Act one — medallion navy */
+  --color-navy: #16335c;
+  --color-navy-deep: #060e1c; /* deep ground: evening at the restaurant, not dev dark mode */
+
+  /* Act two — dark warm brown, tuned around teak #6B4A2E */
+  --color-teak: #6b4a2e;
+  --color-umber: #1c1209; /* act two ground */
+  --color-umber-deep: #120b05;
+
+  /* Light surfaces & text — warm cream, never cold white */
+  --color-parchment: #f4ecdc;
+  --color-cream: #ede3cf; /* porcelain cream body text on dark grounds */
+
+  /* Scene 4 ground — the royal-blue of the house linen; the second melt
+     travels umber → royal (user direction, evolving the brief's act two) */
+  --color-royal: #1e4489;
+
+  /* Accents */
+  --color-jade: #2c8f5c; /* botanical, hover glints. Sparing. */
+  --color-jade-deep: #142f21; /* scene 3 ground — midnight jade, garden at night */
+  --color-gold: #c8a86b; /* gilt details, dates, rules, eyebrows. Never large fills. */
+  --color-clay: #b5542f; /* warm accents, italic highlight words */
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-serif: var(--font-fraunces);
+  --font-sans: var(--font-jost);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* The melt: SceneHouseRemembers scrubs this from navy-deep to umber-deep */
+:root {
+  --page-ground: var(--color-navy-deep);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--page-ground);
+  color: var(--color-cream);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background-color: var(--color-gold);
+  color: var(--color-navy-deep);
+}
+
+@layer utilities {
+  /* Roman-numeral section labels: letterspaced uppercase, gold */
+  .eyebrow {
+    font-family: var(--font-sans);
+    font-size: 0.6875rem;
+    letter-spacing: 0.3em;
+    text-transform: uppercase;
+    color: var(--color-gold);
+  }
+}
+
+/* Scene 4 dish-deck progress dashes */
+[data-dish-dash] {
+  background-color: color-mix(in srgb, var(--color-cream) 25%, transparent);
+  transition: background-color 0.5s ease;
+}
+[data-dish-dash].is-active {
+  background-color: var(--color-gold);
 }
