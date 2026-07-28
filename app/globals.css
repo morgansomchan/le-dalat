@@ -19,9 +19,14 @@
   --color-parchment: #f4ecdc;
   --color-cream: #ede3cf; /* porcelain cream body text on dark grounds */
 
-  /* Scene 4 ground — the royal-blue of the house linen; the second melt
-     travels umber → royal (user direction, evolving the brief's act two) */
+  /* Scene 4 grounds — one per signature dish (user direction: each dish
+     carries its own bright color; the deck tweens between them as it
+     scrolls). Royal is the house-linen blue, kept for the crepes (Paris)
+     so the hand-off into scene 5 still lands on royal. */
   --color-royal: #1e4489;
+  --color-amber: #8f5a14; /* the standing fish — turmeric-fried gold */
+  --color-basil: #1f6b45; /* wagyu pho — the herbs over the broth */
+  --color-ember: #963c1e; /* bo nuong — fire at the table */
 
   /* Accents */
   --color-jade: #2c8f5c; /* botanical, hover glints. Sparing. */

@@ -14,7 +14,9 @@ gsap.registerPlugin(ScrollTrigger);
  * between the four dishes in place — one dish at a time, progress dashes
  * below. Under prefers-reduced-motion the deck degrades to a plain
  * stacked flow (no pin, everything visible).
- * Lives on the royal-blue ground after the second melt (umber → royal).
+ * Each dish brings its own ground color (amber, basil, ember, royal) —
+ * the section's background tweens with the crossfades. The last dish
+ * lands on royal, which scene 5 opens on.
  */
 
 /*
@@ -36,6 +38,9 @@ const PLACEHOLDER_TAG = " [PLACEHOLDER — needs family approval]";
 type Dish = {
   name: string;
   story: string;
+  /** Ground color the deck tweens to while this dish is on stage.
+      Hex literals (not var()) so gsap can interpolate them. */
+  ground: string;
   photos: string[];
   video?: string;
   videoCaption?: string;
@@ -46,6 +51,7 @@ const DISHES: Dish[] = [
     name: "The Standing Fish",
     story:
       "The house legend — how the fish came to stand at the table will be told the family's way.",
+    ground: "#8f5a14", // turmeric amber (--color-amber)
     photos: ["/web_assets/Food/Copy of Le Dalat_20Oct20257623.jpg"],
     video: "/web_assets/videos/standing-fish-web.mp4",
     videoCaption: "The standing fish, arriving table-side",
@@ -54,6 +60,7 @@ const DISHES: Dish[] = [
     name: "Wagyu Pho",
     story:
       "A bowl the family will describe themselves — the broth, and the years behind it.",
+    ground: "#1f6b45", // basil green (--color-basil)
     photos: ["/web_assets/Food/Copy of Le Dalat_20Oct20256572.jpg"],
     video: "/web_assets/videos/wagyu-pho-web.mp4",
     videoCaption: "Wagyu pho, at the table",
@@ -62,6 +69,7 @@ const DISHES: Dish[] = [
     name: "Bo Nuong",
     story:
       "Fire arrives at the table — the family's telling of this ritual goes here.",
+    ground: "#963c1e", // ember (--color-ember)
     photos: ["/web_assets/Food/Copy of Le Dalat_20Oct20250012.jpg"],
     video: "/web_assets/videos/bo-nuong-web.mp4",
     videoCaption: "Bo nuong, over the coals",
@@ -69,6 +77,7 @@ const DISHES: Dish[] = [
   {
     name: "Crepes",
     story: "And to finish, Paris.",
+    ground: "#1e4489", // royal (--color-royal) — Paris blue; scene 5 opens on it
     photos: [
       "/web_assets/Food/Copy of LeDalat_Jan91028 3.jpg",
       "/web_assets/Food/Copy of LeDalat_Jan91033 3.JPG",
@@ -105,6 +114,14 @@ export default function SceneSignatureDishes() {
       // Deck mode: viewport-high stage, slides stacked on top of each other
       gsap.set("[data-dish-deck]", { height: "100svh" });
       gsap.set("[data-dish-dashes]", { display: "flex" });
+      // Deck mode ground: a solid animated color under a fixed jade-deep
+      // melt at the top (the static multi-stop gradient is the
+      // reduced-motion fallback; ctx.revert() restores it)
+      gsap.set(scope.current, {
+        backgroundColor: DISHES[0].ground,
+        backgroundImage:
+          "linear-gradient(to bottom, var(--color-jade-deep) 0%, rgba(20,47,33,0) 30rem)",
+      });
       slides.forEach((slide, i) => {
         gsap.set(slide, { position: "absolute", inset: 0 });
         if (i > 0) gsap.set(slide, { autoAlpha: 0 });
@@ -132,6 +149,17 @@ export default function SceneSignatureDishes() {
       slides.slice(0, -1).forEach((slide, i) => {
         tl.to({}, { duration: 0.6 }) // dwell on the current dish
           .to(slide, { autoAlpha: 0, y: -32, ease: "power1.in", duration: 0.4 })
+          // the ground follows the dish: melt to the next color across
+          // the whole crossfade
+          .to(
+            scope.current,
+            {
+              backgroundColor: DISHES[i + 1].ground,
+              ease: "none",
+              duration: 0.55,
+            },
+            "<",
+          )
           .fromTo(
             slides[i + 1],
             { autoAlpha: 0, y: 32 },
@@ -160,7 +188,9 @@ export default function SceneSignatureDishes() {
     <section
       ref={scope}
       aria-label="The signature dishes"
-      className="bg-[linear-gradient(to_bottom,var(--color-jade-deep)_0%,var(--color-navy)_18%,var(--color-royal)_45%,var(--color-royal)_100%)]"
+      /* Static fallback (reduced motion / no JS): the stacked flow walks
+         the four dish grounds top to bottom; deck mode overrides this */
+      className="bg-[linear-gradient(to_bottom,var(--color-jade-deep)_0%,var(--color-amber)_16%,var(--color-basil)_40%,var(--color-ember)_62%,var(--color-royal)_84%,var(--color-royal)_100%)]"
     >
       <div data-dishes-head className="mx-auto max-w-2xl px-6 pt-28 pb-16 sm:pt-40 sm:pb-24 sm:text-center">
         <p className="eyebrow">III &middot; The Signature Dishes</p>
