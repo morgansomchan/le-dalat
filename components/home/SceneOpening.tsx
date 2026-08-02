@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -45,13 +44,31 @@ export default function SceneOpening() {
           { autoAlpha: 0, y: 16, duration: 1.6 },
           "-=1.2",
         )
-        .from("[data-open-header]", { autoAlpha: 0, duration: 1.4 }, "-=1.2")
         .from("[data-arrival-cue]", { autoAlpha: 0, duration: 1.4 }, "-=0.8");
 
-      gsap.from("[data-arrival-zoom]", {
-        scale: 1.08,
-        duration: 2.6,
-        ease: "power2.out",
+      // Hero: settle in, then a visible breathe (zoom in / zoom out)
+      gsap
+        .timeline({ defaults: { ease: "power2.out" } })
+        .from("[data-arrival-zoom]", { scale: 1.14, duration: 2.2 })
+        .to(
+          "[data-arrival-zoom]",
+          {
+            scale: 1.11,
+            duration: 5.5,
+            ease: "sine.inOut",
+            yoyo: true,
+            repeat: -1,
+          },
+          "-=0.3",
+        );
+
+      gsap.to("[data-threshold-kb]", {
+        scale: 1.1,
+        duration: 6,
+        ease: "sine.inOut",
+        yoyo: true,
+        repeat: -1,
+        delay: 0.5,
       });
 
       // Pin the stage and crossfade villa → gates
@@ -94,10 +111,10 @@ export default function SceneOpening() {
         )
         .from(
           "[data-threshold-copy] > *",
-          { autoAlpha: 0, y: 26, duration: 0.3, stagger: 0.08 },
-          "-=0.2",
+          { autoAlpha: 0, y: 16, duration: 0.5, stagger: 0.05, ease: "power2.out" },
+          "-=0.28",
         )
-        .to({}, { duration: 0.25 }); // dwell on the gates
+        .to({}, { duration: 0.4 }); // dwell on the gates
     }, scope);
 
     return () => ctx.revert();
@@ -106,6 +123,7 @@ export default function SceneOpening() {
   return (
     <section
       ref={scope}
+      id="arrival"
       className="relative"
       aria-label="Arrival and the threshold"
     >
@@ -133,23 +151,25 @@ export default function SceneOpening() {
           className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(6,14,28,0.47)_0%,rgba(6,14,28,0.17)_38%,rgba(6,14,28,0.29)_62%,rgba(6,14,28,0.5)_100%)]"
         />
 
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pt-16 text-center">
-          <h1
-            data-arrival-wordmark
-            className="font-serif text-[clamp(3.25rem,11vw,7.5rem)] leading-none tracking-[0.1em] uppercase text-parchment"
-          >
-            Le Dalat
-          </h1>
+        <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 pt-16">
+          <div className="max-w-xl text-center">
+            <h1
+              data-arrival-wordmark
+              className="font-serif text-[clamp(3.25rem,11vw,7.5rem)] leading-none tracking-[0.1em] uppercase text-parchment"
+            >
+              Le Dalat
+            </h1>
+            {/* Soi 23 and 1983 are documented facts (CLAUDE.md); the phrasing is ours */}
+            <p
+              data-arrival-line
+              className="mt-6 font-serif text-lg italic leading-relaxed text-cream/90 sm:text-xl"
+            >
+              a hidden garden on Sukhumvit Soi 23, since 1983
+            </p>
+          </div>
         </div>
 
-        <div className="relative z-10 flex flex-col items-center gap-8 pb-8">
-          {/* Soi 23 and 1983 are documented facts (CLAUDE.md); the phrasing is ours */}
-          <p
-            data-arrival-line
-            className="max-w-md px-6 font-serif text-lg italic text-cream/90 sm:max-w-none sm:text-xl"
-          >
-            a hidden garden on Sukhumvit Soi 23, since 1983
-          </p>
+        <div className="relative z-10 flex flex-col items-center pb-8">
           <div data-arrival-cue className="flex flex-col items-center gap-3">
             <span className="font-sans text-[0.625rem] tracking-[0.3em] uppercase text-cream/60">
               Enter
@@ -169,61 +189,45 @@ export default function SceneOpening() {
           aria-hidden
           className="absolute inset-0 will-change-transform"
         >
-          <Image
-            src={THRESHOLD_IMAGE}
-            alt=""
-            fill
-            sizes="100vw"
-            className="object-cover"
-          />
+          <div
+            data-threshold-kb
+            className="absolute inset-0 will-change-transform"
+          >
+            <Image
+              src={THRESHOLD_IMAGE}
+              alt=""
+              fill
+              sizes="100vw"
+              className="object-cover"
+            />
+          </div>
         </div>
         {/* Bottom lands on navy-deep for the scroll-out into scene 3 */}
         <div
           aria-hidden
-          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(6,14,28,0.3)_0%,rgba(6,14,28,0.25)_28%,rgba(6,14,28,0.35)_55%,rgba(6,14,28,0.6)_80%,var(--color-navy-deep)_100%)]"
+          className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(6,14,28,0.42)_0%,rgba(6,14,28,0.38)_22%,rgba(6,14,28,0.52)_48%,rgba(6,14,28,0.45)_62%,rgba(6,14,28,0.68)_82%,var(--color-navy-deep)_100%)]"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[radial-gradient(ellipse_90%_60%_at_50%_42%,rgba(6,14,28,0.72)_0%,transparent_68%)]"
         />
 
         <div
           data-threshold-copy
-          className="relative z-10 max-w-xl px-6 text-center"
+          className="relative z-10 max-w-xl px-6 text-center [text-shadow:0_2px_28px_rgba(6,14,28,0.92)]"
         >
           <h2 className="font-serif text-4xl leading-tight text-parchment sm:text-6xl">
             You have left Bangkok.
           </h2>
           {/* Green gates, wooden house, garden, Soi 23 — documented facts; phrasing is ours */}
-          <p className="mt-6 font-serif text-lg italic leading-relaxed text-cream/90 sm:text-xl">
+          <p className="mt-6 font-serif text-lg italic leading-relaxed text-cream sm:text-xl">
             Behind the green gates, a wooden house and its garden keep their
             own time.
           </p>
         </div>
       </div>
 
-      {/* Persistent header — floats above both stages (design_brief.md §5) */}
-      <header
-        data-open-header
-        className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-6 pt-5 sm:px-10 sm:pt-7"
-      >
-        <Link
-          href="/"
-          className="inline-flex min-h-11 items-center"
-          aria-label="Le Dalat — home"
-        >
-          <Image
-            src="/web_assets/LD-logo-crop.svg"
-            alt="Le Dalat"
-            width={200}
-            height={200}
-            priority
-            className="h-auto w-12 sm:w-14"
-          />
-        </Link>
-        <Link
-          href="/reservation"
-          className="inline-flex min-h-11 items-center border border-gold/40 px-5 font-sans text-[0.6875rem] tracking-[0.25em] uppercase text-gold transition-colors duration-500 hover:border-gold hover:text-parchment"
-        >
-          Reserve
-        </Link>
-      </header>
+      {/* Reserve + menu live in HomeSiteHeader (fixed over full scroll) */}
     </section>
   );
 }

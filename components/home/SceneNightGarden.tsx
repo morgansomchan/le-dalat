@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -27,6 +27,8 @@ const NIGHT_IMAGE = "/web_assets/Food/Copy of Le Dalat_20Oct20255148.jpg";
  */
 export default function SceneNightGarden() {
   const scope = useRef<HTMLElement>(null);
+  const [evening, setEvening] = useState("");
+  const [guests, setGuests] = useState("2");
 
   useEffect(() => {
     const reduced = window.matchMedia(
@@ -35,6 +37,19 @@ export default function SceneNightGarden() {
     if (reduced) return;
 
     const ctx = gsap.context(() => {
+      gsap.fromTo(
+        "[data-night-kb]",
+        { scale: 1 },
+        {
+          scale: 1.2,
+          duration: 8,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          delay: 0.3,
+        },
+      );
+
       gsap.from("[data-night-reveal]", {
         autoAlpha: 0,
         y: 36,
@@ -55,25 +70,32 @@ export default function SceneNightGarden() {
   return (
     <section
       ref={scope}
+      id="night-garden"
       aria-label="Night, in the garden"
-      className="relative overflow-hidden bg-umber-deep"
+      className="night-garden-scene relative overflow-hidden bg-transparent"
     >
       {/* The set table glows through a heavy candlelit scrim */}
-      <div aria-hidden className="absolute inset-0">
-        <Image
-          src={NIGHT_IMAGE}
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover"
-        />
+      <div aria-hidden className="absolute inset-0 overflow-hidden">
+        <div
+          data-night-kb
+          className="absolute inset-0 will-change-transform"
+        >
+          <Image
+            src={NIGHT_IMAGE}
+            alt=""
+            fill
+            sizes="100vw"
+            className="object-cover"
+          />
+        </div>
         {/* The hope curve: teak haze clears slowly at the top (no hard photo
             edge against scene 5), then the scrim thins toward the bottom —
             the page ends on the table at its brightest (user direction) */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(107,74,46,1)_0%,rgba(107,74,46,0.55)_12%,rgba(107,74,46,0.15)_28%,rgba(18,11,5,0.32)_52%,rgba(18,11,5,0.18)_100%)]" />
+        <div className="night-garden-scene__handoff" aria-hidden />
+        <div className="night-garden-scene__scrim" aria-hidden />
       </div>
 
-      <div className="relative z-10 mx-auto flex min-h-svh max-w-2xl flex-col items-center justify-center px-6 py-28 text-center sm:py-36">
+      <div className="night-garden-scene__content relative z-10 mx-auto flex min-h-svh max-w-2xl flex-col items-center justify-start px-6 pb-28 text-center sm:pb-36">
         <p data-night-reveal className="eyebrow">
           V &middot; Night, in the Garden
         </p>
@@ -98,38 +120,56 @@ export default function SceneNightGarden() {
           className="mt-12 w-full max-w-md border border-gold/25 bg-black/30 p-6 backdrop-blur-sm sm:p-7"
         >
         {/* Visual-only widget: plain GET form → /reservation?date=…&guests=… */}
-        <form action="/reservation">
-          <div className="flex flex-col gap-4 sm:flex-row">
-            <label className="flex-1 text-left">
+        <form action="/reservation" lang="en-US" className="reserve-widget">
+          <div className="flex flex-col gap-8 sm:flex-row sm:gap-6">
+            <label className="min-w-0 flex-1 text-left">
               <span className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-gold">
                 Evening
               </span>
-              <input
-                type="date"
-                name="date"
-                className="mt-2 w-full border border-cream/20 bg-transparent px-3 py-2.5 font-sans text-sm text-cream [color-scheme:dark] focus:border-gold/60 focus:outline-none"
-              />
+              <div className="reserve-field-wrap reserve-field-wrap--date mt-3">
+                <input
+                  type="date"
+                  name="date"
+                  lang="en-US"
+                  value={evening}
+                  onChange={(e) => setEvening(e.target.value)}
+                  className={`reserve-field reserve-field--date [color-scheme:dark] ${
+                    evening ? "" : "reserve-field--date-empty"
+                  }`}
+                />
+                {!evening && (
+                  <span
+                    aria-hidden
+                    className="pointer-events-none absolute inset-y-0 left-0.5 flex items-center font-serif text-[0.9375rem] italic text-cream/42"
+                  >
+                    DD / MM / YYYY
+                  </span>
+                )}
+              </div>
             </label>
-            <label className="flex-1 text-left">
+            <label className="min-w-0 flex-1 text-left">
               <span className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-gold">
                 Guests
               </span>
-              <select
-                name="guests"
-                defaultValue="2"
-                className="mt-2 w-full border border-cream/20 bg-transparent px-3 py-2.5 font-sans text-sm text-cream [color-scheme:dark] focus:border-gold/60 focus:outline-none"
-              >
-                {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
-                  <option key={n} value={n} className="bg-umber-deep">
-                    {n} {n === 1 ? "guest" : "guests"}
-                  </option>
-                ))}
-              </select>
+              <div className="reserve-field-wrap mt-3">
+                <select
+                  name="guests"
+                  value={guests}
+                  onChange={(e) => setGuests(e.target.value)}
+                  className="reserve-field reserve-field--guests"
+                >
+                  {[1, 2, 3, 4, 5, 6, 7, 8].map((n) => (
+                    <option key={n} value={n}>
+                      {n} {n === 1 ? "guest" : "guests"}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </label>
           </div>
           <button
             type="submit"
-            className="mt-6 inline-flex min-h-11 w-full items-center justify-center border border-gold/50 px-5 font-sans text-[0.6875rem] tracking-[0.25em] uppercase text-gold transition-colors duration-500 hover:border-gold hover:bg-gold/10 hover:text-parchment"
+            className="btn-reserve-glow mt-6 inline-flex min-h-11 w-full items-center justify-center border border-gold/50 px-5 font-sans text-[0.6875rem] tracking-[0.25em] uppercase text-gold transition-colors duration-500 hover:border-gold hover:bg-gold/10 hover:text-parchment"
           >
             Reserve
           </button>
@@ -168,21 +208,33 @@ export default function SceneNightGarden() {
           </div>
         </div>
 
-        {/* Family circle — links pending (PLACEHOLDER hrefs) */}
         <p className="mt-7 text-center font-sans text-[0.6875rem] tracking-[0.2em] uppercase text-cream/70">
-          Join the family circle &mdash;{" "}
+          Join the family &mdash;{" "}
           <a
-            href="#"
+            href="https://www.facebook.com/ledalatrestaurant"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gold underline decoration-gold/40 underline-offset-4 transition-colors duration-500 hover:text-parchment"
           >
             Facebook
           </a>{" "}
           &middot;{" "}
           <a
-            href="#"
+            href="https://page.line.me/ysn7495x"
+            target="_blank"
+            rel="noopener noreferrer"
             className="text-gold underline decoration-gold/40 underline-offset-4 transition-colors duration-500 hover:text-parchment"
           >
             LINE
+          </a>{" "}
+          &middot;{" "}
+          <a
+            href="https://www.instagram.com/ledalatrestaurant/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gold underline decoration-gold/40 underline-offset-4 transition-colors duration-500 hover:text-parchment"
+          >
+            Instagram
           </a>
         </p>
         </div>
