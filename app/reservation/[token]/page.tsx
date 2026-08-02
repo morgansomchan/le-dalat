@@ -17,7 +17,7 @@ export default async function ManagePage({
 }) {
   const { token } = await params;
   return (
-    <main className="reserve-room min-h-svh">
+    <main className="min-h-svh bg-umber-deep">
       <ManageMock known={token === "sample-token"} />
     </main>
   );

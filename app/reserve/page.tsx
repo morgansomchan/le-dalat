@@ -25,7 +25,7 @@ export default async function ReservePage({
   const party = Number.isInteger(partyRaw) && partyRaw > 0 ? partyRaw : null;
 
   return (
-    <main className="reserve-room min-h-svh">
+    <main className="min-h-svh bg-umber-deep">
       <ReserveMock initialDate={date} initialParty={party} />
     </main>
   );
