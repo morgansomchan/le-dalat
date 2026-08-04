@@ -1,4 +1,5 @@
 import SmoothScroll from "@/components/SmoothScroll";
+import HomeSiteHeader from "@/components/home/HomeSiteHeader";
 import SceneOpening from "@/components/home/SceneOpening";
 import SceneHouseRemembers from "@/components/home/SceneHouseRemembers";
 import SceneSignatureDishes from "@/components/home/SceneSignatureDishes";
@@ -17,11 +18,14 @@ export default function Home() {
   return (
     <main>
       <SmoothScroll />
+      <HomeSiteHeader />
       <SceneOpening />
-      <SceneHouseRemembers />
-      <SceneSignatureDishes />
-      <ScenePeople />
-      <SceneNightGarden />
+      <div className="home-story-canvas">
+        <SceneHouseRemembers />
+        <SceneSignatureDishes />
+        <ScenePeople />
+        <SceneNightGarden />
+      </div>
     </main>
   );
 }

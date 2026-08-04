@@ -9,19 +9,16 @@ gsap.registerPlugin(ScrollTrigger);
 
 /**
  * Scene 5 — The people of the house (design_brief.md §3, scene 5).
- * A large group photograph first — the whole house together — then five
- * portraits in arched frames echoing the villa's moon-gate window.
+ * A large group photograph first — the whole house together — then four
+ * team portraits in arched frames echoing the villa's moon-gate window.
  * Warm, human, slightly mischievous.
  * Ground travels royal (from scene 4) back into act-two brown.
  */
 
 /*
- * PLACEHOLDER CONTENT — every label is placeholder: role labels from the
- * earlier prototype are known to be wrong, so labels only describe what
- * the photograph shows, never a name, title or family relation. Photos
- * swappable from web_assets/"People of Le Dalat".
+ * House team — names and roles provided by the family (Aug 2026).
+ * Photos swappable from web_assets/"People of Le Dalat".
  */
-const PLACEHOLDER_TAG = "[PLACEHOLDER — name & role pending]";
 
 const GROUP_PHOTO = {
   photo: "/web_assets/People of Le Dalat/Copy of Le Dalat_20Oct20250332.jpg",
@@ -31,23 +28,27 @@ const GROUP_PHOTO = {
 const PEOPLE = [
   {
     photo: "/web_assets/People of Le Dalat/Copy of LeDalat_Jan93084.jpg",
-    label: "At the set table",
+    name: "P'Thip",
+    description:
+      "The Head of Service, creating lasting relationships by making every guest feel like family.",
   },
   {
     photo: "/web_assets/People of Le Dalat/Copy of LeDalat_Jan91039 3.jpg",
-    label: "At the garden window",
+    name: "Micky",
+    description:
+      "The General Manager, preserving Madame Hoa Ly’s legacy and the authentic traditions of Le Dalat.",
   },
   {
     photo: "/web_assets/People of Le Dalat/Copy of LeDalat_Jan93109.jpg",
-    label: "At the bar",
+    name: "P'A",
+    description:
+      "The Beverage Manager, crafting every drink with sincerity, care, and a personal touch.",
   },
   {
     photo: "/web_assets/People of Le Dalat/Copy of LeDalat_Jan92064.jpg",
-    label: "Service, with slight mischief",
-  },
-  {
-    photo: "/web_assets/People of Le Dalat/Copy of LeDalat_Jan91041 1.jpg",
-    label: "Dinner, carried",
+    name: "P'Vee",
+    description:
+      "The Head Chef, preserving generations of Vietnamese recipes with over 40 years of culinary expertise.",
   },
 ];
 
@@ -106,10 +107,11 @@ export default function ScenePeople() {
   return (
     <section
       ref={scope}
+      id="people"
       aria-label="The people of the house"
-      className="bg-[linear-gradient(to_bottom,var(--color-royal)_0%,var(--color-umber)_32%,var(--color-teak)_100%)] px-6 py-28 sm:py-40"
+      className="people-scene px-6 pt-28 pb-[calc(8rem+var(--scene-edge-blend))] sm:pt-40 sm:pb-[calc(10rem+var(--scene-edge-blend))]"
     >
-      <div className="mx-auto max-w-6xl">
+      <div className="relative z-[3] mx-auto max-w-6xl">
         <div data-people-head className="mx-auto max-w-2xl sm:text-center">
           <p className="eyebrow">IV &middot; The People of the House</p>
           {/* Voice reference from the brief; "three generations" awaits approval */}
@@ -117,9 +119,6 @@ export default function ScenePeople() {
             Three generations will say{" "}
             <em className="text-clay">good evening.</em>
           </h2>
-          <p className="mt-4 font-sans text-[0.625rem] tracking-[0.2em] uppercase text-gold/60">
-            Placeholder — needs family approval
-          </p>
         </div>
 
         {/* The whole house together, in front of the photograph wall */}
@@ -137,39 +136,36 @@ export default function ScenePeople() {
             <span className="font-sans text-[0.6875rem] tracking-[0.25em] uppercase text-cream/70">
               {GROUP_PHOTO.caption}
             </span>
-            <span className="mt-1 block font-sans text-[0.5625rem] tracking-[0.15em] uppercase text-cream/35">
-              [PLACEHOLDER — who is who awaits the family]
-            </span>
           </figcaption>
         </figure>
 
         <div
           data-people-grid
-          className="mt-20 grid gap-12 sm:mt-28 sm:grid-cols-5 sm:gap-6"
+          className="mt-20 grid gap-12 sm:mt-28 sm:grid-cols-2 sm:gap-8 lg:grid-cols-4"
         >
           {PEOPLE.map((person) => (
             <figure
               key={person.photo}
               data-people-portrait
-              className="mx-auto w-full max-w-[16rem] sm:max-w-none"
+              className="mx-auto w-full max-w-[19rem] sm:max-w-none"
             >
               {/* Moon-gate arch: full-round top echoing the villa's window */}
               <div className="relative aspect-[7/10] overflow-hidden rounded-t-full ring-1 ring-gold/30">
                 <Image
                   src={person.photo}
-                  alt={person.label}
+                  alt={person.name}
                   fill
                   sizes="(min-width: 640px) 20vw, 65vw"
                   className="object-cover"
                 />
               </div>
-              <figcaption className="mt-4 text-center">
+              <figcaption className="relative z-[1] mt-4 text-center">
                 <span className="font-sans text-[0.625rem] tracking-[0.2em] uppercase text-cream/80">
-                  {person.label}
+                  {person.name}
                 </span>
-                <span className="mt-1 block font-sans text-[0.5625rem] tracking-[0.12em] uppercase text-cream/35">
-                  {PLACEHOLDER_TAG}
-                </span>
+                <p className="people-scene__bio mt-2 font-serif text-sm leading-relaxed text-pretty text-cream/65 sm:text-[0.9375rem]">
+                  {person.description}
+                </p>
               </figcaption>
             </figure>
           ))}

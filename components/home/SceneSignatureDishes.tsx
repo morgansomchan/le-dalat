@@ -14,16 +14,10 @@ gsap.registerPlugin(ScrollTrigger);
  * between the four dishes in place — one dish at a time, progress dashes
  * below. Under prefers-reduced-motion the deck degrades to a plain
  * stacked flow (no pin, everything visible).
- * Each dish brings its own ground color (amber, basil, ember, royal) —
- * the section's background tweens with the crossfades. The last dish
- * lands on royal, which scene 5 opens on.
  */
 
 /*
- * PLACEHOLDER CONTENT — dish stories await the family's telling, especially
- * the Standing Fish legend. Story lines are deliberately generic scaffolding
- * (placeholder copy must not invent facts). Images are swappable — change a
- * `photos` line to recast from web_assets/Food.
+ * Dish copy — family-provided descriptions (Aug 2026). Images are swappable.
  *
  * VIDEOS — the *-web.mp4 files are 540p re-encodes cut from the originals
  * in web_assets/videos (source files untouched):
@@ -33,57 +27,120 @@ gsap.registerPlugin(ScrollTrigger);
  * They carry baked-in Thai subtitles; treat as placeholder cuts until
  * English/clean versions are provided.
  */
-const PLACEHOLDER_TAG = " [PLACEHOLDER — needs family approval]";
+type DishAtmosphere = "fish" | "pho" | "bo" | "crepes";
 
 type Dish = {
   name: string;
   story: string;
-  /** Ground color the deck tweens to while this dish is on stage.
-      Hex literals (not var()) so gsap can interpolate them. */
-  ground: string;
   photos: string[];
   video?: string;
   videoCaption?: string;
+  atmosphere: DishAtmosphere;
 };
+
+const DISH_GROUND_VAR: Record<DishAtmosphere, string> = {
+  fish: "--color-dish-fish-blue",
+  pho: "--color-dish-pho-gold",
+  bo: "--color-dish-burgundy",
+  crepes: "--color-dish-crepe-cream",
+};
+
+/** Bo → crepes: step through warm browns so RGB lerp never hits purple. */
+const BO_TO_CREPE_GROUND = [
+  "#3d1824",
+  "#4a3228",
+  "#5c4030",
+  "#6e5040",
+  "#806050",
+  "#927060",
+  "#a48870",
+  "#b5a480",
+] as const;
+
+function interpolateGroundColor(
+  fromKey: DishAtmosphere,
+  toKey: DishAtmosphere,
+  t: number,
+  colors: Record<DishAtmosphere, string>,
+): string {
+  if (fromKey === "bo" && toKey === "crepes") {
+    const path = BO_TO_CREPE_GROUND;
+    const segment = t * (path.length - 1);
+    const i = Math.min(path.length - 2, Math.floor(segment));
+    const localT = segment - i;
+    return gsap.utils.interpolate(path[i], path[i + 1])(localT);
+  }
+  return gsap.utils.interpolate(colors[fromKey], colors[toKey])(t);
+}
+
+function readDishGroundColors(): Record<DishAtmosphere, string> {
+  const root = getComputedStyle(document.documentElement);
+  return (Object.keys(DISH_GROUND_VAR) as DishAtmosphere[]).reduce(
+    (acc, key) => {
+      acc[key] = root.getPropertyValue(DISH_GROUND_VAR[key]).trim();
+      return acc;
+    },
+    {} as Record<DishAtmosphere, string>,
+  );
+}
 
 const DISHES: Dish[] = [
   {
-    name: "The Standing Fish",
+    name: "Standing Fish",
     story:
-      "The house legend — how the fish came to stand at the table will be told the family's way.",
-    ground: "#8f5a14", // turmeric amber (--color-amber)
+      "A whole fish prepared in traditional Vietnamese style, served with fresh herbs, vegetables, and dipping sauce.",
     photos: ["/web_assets/Food/Copy of Le Dalat_20Oct20257623.jpg"],
     video: "/web_assets/videos/standing-fish-web.mp4",
     videoCaption: "The standing fish, arriving table-side",
+    atmosphere: "fish",
   },
   {
     name: "Wagyu Pho",
     story:
-      "A bowl the family will describe themselves — the broth, and the years behind it.",
-    ground: "#1f6b45", // basil green (--color-basil)
+      "Vietnam’s iconic noodle soup, featuring a slow-simmered aromatic broth, rice noodles, fresh herbs, and premium Wagyu beef.",
     photos: ["/web_assets/Food/Copy of Le Dalat_20Oct20256572.jpg"],
     video: "/web_assets/videos/wagyu-pho-web.mp4",
     videoCaption: "Wagyu pho, at the table",
+    atmosphere: "pho",
   },
   {
-    name: "Bo Nuong",
+    name: "Bò Nướng",
     story:
-      "Fire arrives at the table — the family's telling of this ritual goes here.",
-    ground: "#963c1e", // ember (--color-ember)
+      "Traditional Vietnamese grilled beef, marinated with fragrant spices and chargrilled for a smoky, savory flavor.",
     photos: ["/web_assets/Food/Copy of Le Dalat_20Oct20250012.jpg"],
     video: "/web_assets/videos/bo-nuong-web.mp4",
-    videoCaption: "Bo nuong, over the coals",
+    videoCaption: "Bò nướng, over the coals",
+    atmosphere: "bo",
   },
   {
-    name: "Crepes",
-    story: "And to finish, Paris.",
-    ground: "#1e4489", // royal (--color-royal) — Paris blue; scene 5 opens on it
+    name: "Vietnamese Crêpes (Bánh Xèo)",
+    story:
+      "A crispy turmeric-infused rice crêpe filled with shrimp, pork, and bean sprouts, wrapped in fresh herbs and dipped in fish sauce.",
     photos: [
       "/web_assets/Food/Copy of LeDalat_Jan91028 3.jpg",
       "/web_assets/Food/Copy of LeDalat_Jan91033 3.JPG",
     ],
+    atmosphere: "crepes",
   },
 ];
+
+function DishLotusMark() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 16 16"
+      className="size-2.5 shrink-0 text-gold/35"
+      fill="none"
+    >
+      <path
+        d="M8 11.5c-2.2-3.2-5.5-4.5-5.5-7.2 0 2.4 2.1 4 5.5 5.5 3.4-1.5 5.5-3.1 5.5-5.5 0 2.7-3.3 4-5.5 7.2z"
+        stroke="currentColor"
+        strokeWidth="0.65"
+      />
+      <path d="M8 12.2V8.8M6.2 7.8c-.6-2.6.3-4.7 1.8-5.5M9.8 7.8c.6-2.6-.3-4.7-1.8-5.5" stroke="currentColor" strokeWidth="0.5" />
+    </svg>
+  );
+}
 
 export default function SceneSignatureDishes() {
   const scope = useRef<HTMLElement>(null);
@@ -110,21 +167,39 @@ export default function SceneSignatureDishes() {
 
       const slides = gsap.utils.toArray<HTMLElement>("[data-dish-slide]");
       const dashes = gsap.utils.toArray<HTMLElement>("[data-dish-dash]");
+      const ground = scope.current?.querySelector<HTMLElement>("[data-dish-ground]");
+      const deck = scope.current?.querySelector<HTMLElement>("[data-dish-deck]");
+      if (!ground || !deck) return;
 
-      // Deck mode: viewport-high stage, slides stacked on top of each other
-      gsap.set("[data-dish-deck]", { height: "100svh" });
+      const scrubDishGround = (progress: number) => {
+        const colors = readDishGroundColors();
+        const segment = progress * (slides.length - 1);
+        const i = Math.min(slides.length - 2, Math.floor(segment));
+        const t = segment - i;
+        const idx = Math.min(
+          slides.length - 1,
+          Math.round(progress * (slides.length - 1)),
+        );
+        const onCrepes = idx === slides.length - 1;
+        deck.toggleAttribute("data-last-dish", onCrepes);
+        deck.toggleAttribute("data-crepe-melt", onCrepes);
+        if (onCrepes) {
+          ground.style.setProperty("--dish-ground", colors.crepes);
+          return;
+        }
+        const fromKey = slides[i].dataset.dishAtmosphere as DishAtmosphere;
+        const toKey = slides[i + 1].dataset.dishAtmosphere as DishAtmosphere;
+        ground.style.setProperty(
+          "--dish-ground",
+          interpolateGroundColor(fromKey, toKey, t, colors),
+        );
+      };
+
       gsap.set("[data-dish-dashes]", { display: "flex" });
-      // Deck mode ground: a solid animated color under a fixed jade-deep
-      // melt at the top (the static multi-stop gradient is the
-      // reduced-motion fallback; ctx.revert() restores it)
-      gsap.set(scope.current, {
-        backgroundColor: DISHES[0].ground,
-        backgroundImage:
-          "linear-gradient(to bottom, var(--color-jade-deep) 0%, rgba(20,47,33,0) 30rem)",
-      });
+      gsap.set("[data-dish-slide]", { backgroundColor: "transparent" });
+      scrubDishGround(0);
       slides.forEach((slide, i) => {
-        gsap.set(slide, { position: "absolute", inset: 0 });
-        if (i > 0) gsap.set(slide, { autoAlpha: 0 });
+        gsap.set(slide, { zIndex: i === 0 ? 2 : 1, autoAlpha: i === 0 ? 1 : 0 });
       });
 
       const tl = gsap.timeline({
@@ -137,6 +212,7 @@ export default function SceneSignatureDishes() {
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate(self) {
+            scrubDishGround(self.progress);
             const idx = Math.min(
               slides.length - 1,
               Math.round(self.progress * (slides.length - 1)),
@@ -147,84 +223,64 @@ export default function SceneSignatureDishes() {
       });
 
       slides.slice(0, -1).forEach((slide, i) => {
-        tl.to({}, { duration: 0.6 }) // dwell on the current dish
-          .to(slide, { autoAlpha: 0, y: -32, ease: "power1.in", duration: 0.4 })
-          // the ground follows the dish: melt to the next color across
-          // the whole crossfade
-          .to(
-            scope.current,
-            {
-              backgroundColor: DISHES[i + 1].ground,
-              ease: "none",
-              duration: 0.55,
-            },
-            "<",
-          )
+        tl.to({}, { duration: 0.6 })
+          .to(slide, { autoAlpha: 0, ease: "power1.in", duration: 0.35 })
           .fromTo(
             slides[i + 1],
-            { autoAlpha: 0, y: 32 },
-            { autoAlpha: 1, y: 0, ease: "power1.out", duration: 0.4 },
-            "<0.15",
+            { autoAlpha: 0 },
+            { autoAlpha: 1, ease: "power1.out", duration: 0.35 },
+            "<0.06",
           );
       });
-      tl.to({}, { duration: 0.6 }); // dwell on the last dish
-
-      gsap.from("[data-dishes-menu-link]", {
-        autoAlpha: 0,
-        duration: 1.4,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: "[data-dishes-menu-link]",
-          start: "top 85%",
-          toggleActions: "play none none reverse",
-        },
-      });
+      tl.to({}, { duration: 0.6 });
     }, scope);
 
     return () => ctx.revert();
   }, []);
 
   return (
-    <section
-      ref={scope}
-      aria-label="The signature dishes"
-      /* Static fallback (reduced motion / no JS): the stacked flow walks
-         the four dish grounds top to bottom; deck mode overrides this */
-      className="bg-[linear-gradient(to_bottom,var(--color-jade-deep)_0%,var(--color-amber)_16%,var(--color-basil)_40%,var(--color-ember)_62%,var(--color-royal)_84%,var(--color-royal)_100%)]"
-    >
-      <div data-dishes-head className="mx-auto max-w-2xl px-6 pt-28 pb-16 sm:pt-40 sm:pb-24 sm:text-center">
-        <p className="eyebrow">III &middot; The Signature Dishes</p>
-        {/* PLACEHOLDER headline — house voice, no factual claims */}
-        <h2 className="mt-6 font-serif text-[clamp(2.25rem,9.5vw,2.75rem)] leading-[1.12] text-balance text-parchment sm:text-5xl sm:leading-tight">
-          Four dishes tell the story.{" "}
-          <em className="text-clay">The rest is dinner.</em>
-        </h2>
+    <section ref={scope} id="dishes" aria-label="The signature dishes" className="dishes-scene">
+      <div
+        data-dishes-head
+        className="dishes-scene__head relative z-[2] pt-28 pb-[calc(4rem+var(--scene-edge-blend))] sm:pt-40 sm:pb-[calc(6rem+var(--scene-edge-blend))]"
+      >
+        <div className="mx-auto max-w-2xl px-6 sm:text-center">
+          <p className="eyebrow">III &middot; The Signature Dishes</p>
+          <h2 className="mt-6 font-serif text-[clamp(2.25rem,9.5vw,2.75rem)] leading-[1.12] text-balance text-parchment sm:text-5xl sm:leading-tight">
+            Four signature dishes.{" "}
+            <em className="text-clay">One enduring tradition.</em>
+          </h2>
+        </div>
       </div>
 
-      <div data-dish-deck className="relative">
+      <div className="dishes-scene__tail">
+      <div data-dish-deck className="relative z-[2] overflow-hidden">
+        <div data-dish-ground aria-hidden className="absolute inset-0 z-0" />
         {DISHES.map((dish) => (
           <article
             key={dish.name}
             data-dish-slide
-            className="flex items-center py-14 sm:py-0"
+            data-dish-atmosphere={dish.atmosphere}
+            className="relative z-[1] w-full py-8 sm:py-0"
           >
-            <div className="mx-auto grid w-full max-w-7xl gap-7 px-6 sm:grid-cols-[0.75fr_1.25fr] sm:items-center sm:gap-10">
+            <div className="relative z-[1] mx-auto grid w-full max-w-7xl gap-7 px-6 sm:grid-cols-[0.75fr_1.25fr] sm:items-center sm:gap-10">
               <div>
                 <h3 className="font-serif text-3xl text-parchment sm:text-4xl">
                   {dish.name}
                 </h3>
+                <div aria-hidden className="dish-title-rule">
+                  <span className="dish-title-rule__line" />
+                  <DishLotusMark />
+                  <span className="dish-title-rule__line dish-title-rule__line--tail" />
+                </div>
                 <p className="mt-4 max-w-prose font-serif text-lg italic leading-relaxed text-cream/85 sm:text-xl">
                   {dish.story}
-                  <span className="font-sans text-sm not-italic text-cream/40">
-                    {PLACEHOLDER_TAG}
-                  </span>
                 </p>
               </div>
-              {/* Media sized by viewport height so the pinned stage is filled */}
               <div className="flex items-start justify-center gap-3 sm:justify-end sm:gap-6">
                 {dish.video && (
                   <figure className="shrink-0">
-                    <div className="relative aspect-[9/16] h-[min(34svh,17.5rem)] overflow-hidden rounded-2xl shadow-[0_18px_50px_-12px_rgba(0,0,0,0.5)] sm:h-[min(64svh,40rem)] sm:rounded-3xl">
+                    <div className="dish-media-frame relative aspect-[9/16] h-[min(34svh,17.5rem)] overflow-hidden rounded-2xl sm:h-[min(64svh,40rem)] sm:rounded-3xl">
                       <video
                         src={dish.video}
                         poster={dish.photos[0]}
@@ -237,19 +293,16 @@ export default function SceneSignatureDishes() {
                       />
                     </div>
                     {dish.videoCaption && (
-                      <figcaption className="mt-3 text-center font-sans text-[0.625rem] tracking-[0.2em] uppercase text-cream/60">
-                        {dish.videoCaption}
-                      </figcaption>
+                      <figcaption className="sr-only">{dish.videoCaption}</figcaption>
                     )}
                   </figure>
                 )}
                 {dish.photos.map((photo) => (
                   <div
                     key={photo}
-                    className={`relative overflow-hidden rounded-2xl shadow-[0_18px_50px_-12px_rgba(0,0,0,0.5)] sm:rounded-3xl ${
+                    className={`dish-media-frame relative overflow-hidden rounded-2xl sm:rounded-3xl ${
                       dish.video
-                        ? // matches the video's height, stretches into the remaining width
-                          "h-[min(34svh,17.5rem)] min-w-0 flex-1 sm:h-[min(64svh,40rem)]"
+                        ? "h-[min(34svh,17.5rem)] min-w-0 flex-1 sm:h-[min(64svh,40rem)]"
                         : "aspect-[4/5] h-[min(25svh,13rem)] shrink-0 sm:h-[min(54svh,33rem)]"
                     }`}
                   >
@@ -267,10 +320,9 @@ export default function SceneSignatureDishes() {
           </article>
         ))}
 
-        {/* Progress dashes — deck mode only (display set by JS) */}
         <div
           data-dish-dashes
-          className="absolute bottom-7 left-1/2 hidden -translate-x-1/2 gap-2.5"
+          className="absolute bottom-7 left-1/2 z-[2] hidden -translate-x-1/2 gap-2.5"
           aria-hidden
         >
           {DISHES.map((dish) => (
@@ -279,14 +331,32 @@ export default function SceneSignatureDishes() {
         </div>
       </div>
 
-      <div data-dishes-menu-link className="px-6 py-24 sm:py-28 sm:text-center">
-        <Link
-          href="/menu"
-          className="inline-flex min-h-11 items-center gap-3 font-sans text-[0.6875rem] tracking-[0.25em] uppercase text-gold transition-colors duration-500 hover:text-parchment"
-        >
-          The full menu
-          <span aria-hidden className="h-px w-10 bg-gold/50" />
-        </Link>
+      <div className="dishes-scene__fade-zone">
+        <div className="dishes-scene__outro">
+          <div
+            data-dishes-menu-link
+            className="dishes-scene__menu flex min-h-[var(--dishes-menu-block)] flex-col items-center justify-center px-6 py-12 sm:py-16 sm:text-center"
+          >
+            <Link
+              href="/menu"
+              className="dishes-scene__menu-link inline-flex min-h-11 w-full max-w-md items-center justify-center gap-3 font-sans text-[0.6875rem] tracking-[0.25em] uppercase sm:max-w-none sm:w-auto"
+            >
+              <span
+                aria-hidden
+                className="dishes-scene__menu-link__rule h-px min-w-8 flex-1 sm:w-10 sm:flex-none"
+              />
+              <span className="dishes-scene__menu-link__label shrink-0">
+                The full menu
+              </span>
+              <span
+                aria-hidden
+                className="dishes-scene__menu-link__rule h-px min-w-8 flex-1 sm:w-10 sm:flex-none"
+              />
+            </Link>
+          </div>
+        </div>
+        <div className="dishes-scene__fade-run" aria-hidden />
+      </div>
       </div>
     </section>
   );
