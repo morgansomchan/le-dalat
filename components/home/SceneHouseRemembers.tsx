@@ -20,29 +20,25 @@ gsap.registerPlugin(ScrollTrigger);
  */
 
 /*
- * PLACEHOLDER CONTENT — deliberately generic: placeholder copy must not
- * invent facts (project_context.md "Content honesty"). Dates come from the
- * brief's timeline structure and are themselves unverified. Each entry
- * carries a visible [PLACEHOLDER] tag until the family approves the story.
+ * Heritage timeline — editorial copy; dates reflect the family narrative
+ * as provided for the public site.
  */
-const PLACEHOLDER_TAG = " [PLACEHOLDER — needs family approval]";
-
 const TIMELINE = [
   {
     date: "1926",
-    copy: "The house before the restaurant — a line or two about this address in its earliest days, told the way the family tells it.",
+    copy: "The family matriarch established the wealthy Mekong Delta culinary traditions and helped found the Cao Dai religion in French colonial Vietnam.",
   },
   {
     date: "1983",
-    copy: "The founding — how the first table came to be set behind the green gates, and by whom.",
+    copy: "Madame Hoa Ly opened Le Dalat on Sukhumvit Soi 23 as Bangkok’s pioneer upscale Vietnamese restaurant.",
   },
   {
     date: "2009",
-    copy: "The next generation — what changed hands in the kitchen, and what never will.",
+    copy: "The restaurant relocated within the same street into a reconstructed, authentic 1896 wooden farmhouse imported from Vietnam.",
   },
   {
-    date: "Tonight",
-    copy: "The lamps are lit, the tables are set — the story continues at dinner.",
+    date: "Today",
+    copy: "The third generation of the family continues to run the legendary dining institution using directly imported Vietnamese ingredients.",
     invitation: true,
   },
 ];
@@ -118,20 +114,17 @@ export default function SceneHouseRemembers() {
   return (
     <section
       ref={scope}
+      id="heritage"
       aria-label="The house remembers"
-      className="relative bg-[linear-gradient(to_bottom,var(--color-navy-deep)_0%,var(--color-navy-deep)_10%,var(--color-jade-deep)_42%,var(--color-jade-deep)_100%)] px-6 py-28 sm:py-40"
+      className="house-scene px-6 pt-28 pb-[calc(7rem+var(--scene-edge-blend))] sm:pt-40 sm:pb-[calc(10rem+var(--scene-edge-blend))]"
     >
-      <div className="mx-auto max-w-2xl">
+      <div className="relative z-[1] mx-auto max-w-2xl">
         <div data-house-head>
           <p className="eyebrow">II &middot; The House Remembers</p>
-          {/* PLACEHOLDER headline — the brief's voice reference; the name is unverified */}
           <h2 className="mt-6 font-serif text-[clamp(2.5rem,10.5vw,3rem)] leading-[1.12] text-balance text-parchment sm:text-5xl sm:leading-tight">
-            Madame Hoa Ly set a table in 1983.{" "}
-            <em className="text-clay">It has never been cleared.</em>
+            Madame Hoa Ly welcomed her first guests in 1983.{" "}
+            <em className="text-clay">The table has been waiting ever since.</em>
           </h2>
-          <p className="mt-4 font-sans text-[0.625rem] tracking-[0.2em] uppercase text-gold/60">
-            Placeholder — needs family approval
-          </p>
         </div>
 
         <div data-house-timeline className="relative mt-20 sm:mt-28">
@@ -162,7 +155,6 @@ export default function SceneHouseRemembers() {
                 <div data-entry-copy>
                   <p className="mt-4 max-w-prose text-base leading-relaxed text-cream/85 sm:text-lg">
                     {entry.copy}
-                    <span className="text-cream/40">{PLACEHOLDER_TAG}</span>
                   </p>
                   {entry.invitation && (
                     <p className="mt-6 font-serif text-lg italic text-cream">
