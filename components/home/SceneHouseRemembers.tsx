@@ -13,7 +13,8 @@ gsap.registerPlugin(ScrollTrigger);
  * as the visitor reaches them. Weighted and unhurried, nothing bouncy.
  *
  * The melt (§2) happens across this section: the ground travels from act-one
- * navy to act-two brown as a static gradient painted on the section — the
+ * navy into midnight jade (user direction, evolving the brief's brown) as a
+ * static gradient painted on the section — the
  * transition is scroll-linked by geometry, works identically with reduced
  * motion, and costs no JS.
  */

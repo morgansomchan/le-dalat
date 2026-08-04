@@ -1,4 +1,3 @@
-@AGENTS.md
 # Le Dalat — Public Website (le-dalat-web)
 
 ## What this project is

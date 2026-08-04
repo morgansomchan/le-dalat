@@ -8,9 +8,10 @@ import SceneNightGarden from "@/components/home/SceneNightGarden";
 
 /**
  * Homepage — the scroll narrative (design_brief.md §3), all six scenes.
- * The journey of color: navy (1–2) → melt to brown (3) → dive to royal
- * blue (4, the house linen) → back through brown (5) → darkest brown
- * finale (6). Each scene opens on the ground the previous one ends on.
+ * The journey of color: navy (1–2) → midnight jade (3) → one ground per
+ * dish (4: amber → basil → ember → royal) → royal warming through brown
+ * (5) → the lit table (6). Each scene opens on the ground the previous
+ * one ends on.
  * The page ends at the reservation handoff — nothing after the invitation.
  */
 export default function Home() {
