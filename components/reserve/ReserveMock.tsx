@@ -207,7 +207,7 @@ export default function ReserveMock({
 
             {dateLayer === "fortnight" ? (
               <div key="fortnight" className="page-turn">
-                <div className="mt-10 grid grid-cols-7 gap-x-1.5 gap-y-4">
+                <div className="-mx-4 mt-10 grid grid-cols-7 gap-x-0.5 gap-y-4">
                   {days.map((d) => {
                     const active = date === d.key;
                     return (
@@ -216,7 +216,7 @@ export default function ReserveMock({
                           type="button"
                           onClick={() => chooseDate(d.key)}
                           aria-label={speakDate(d.key)}
-                          className={`flex h-11 w-11 items-center justify-center rounded-full font-serif text-[1.1875rem] transition-colors duration-300 ${
+                          className={`flex h-12 w-12 items-center justify-center rounded-full font-serif text-[1.25rem] transition-colors duration-300 ${
                             active ? "bg-navy text-parchment" : "text-navy hover:bg-navy/10"
                           }`}
                         >
@@ -271,7 +271,7 @@ export default function ReserveMock({
                   </button>
                 </div>
 
-                <div className="mt-4 grid grid-cols-7 gap-x-0.5 gap-y-1.5">
+                <div className="-mx-3 mt-4 grid grid-cols-7 gap-x-0.5 gap-y-1.5">
                   {["M", "T", "W", "T", "F", "S", "S"].map((wd, i) => (
                     <span
                       key={`${wd}${i}`}
@@ -298,7 +298,7 @@ export default function ReserveMock({
                             disabled={!open}
                             onClick={() => chooseDate(key)}
                             aria-label={speakDate(key)}
-                            className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full font-serif text-[1.1875rem] transition-colors duration-300 ${
+                            className={`mx-auto flex h-12 w-12 items-center justify-center rounded-full font-serif text-[1.25rem] transition-colors duration-300 ${
                               active
                                 ? "bg-navy text-parchment"
                                 : open
@@ -344,12 +344,12 @@ export default function ReserveMock({
                 type="button"
                 aria-label="Fewer guests"
                 onClick={() => setParty((p) => Math.max(1, p - 1))}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-navy/25 text-lg text-navy transition-colors duration-300 hover:border-navy/60"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-navy/25 text-lg text-navy transition-colors duration-300 hover:border-navy/60"
               >
                 −
               </button>
-              <div className="flex h-32 w-32 flex-col items-center justify-center rounded-full border border-navy/35">
-                <span className="font-serif text-[3.25rem] leading-none text-navy">
+              <div className="flex h-36 w-36 flex-col items-center justify-center rounded-full border border-navy/35">
+                <span className="font-serif text-[3.5rem] leading-none text-navy">
                   {tooLarge ? `${ONLINE_PARTY_MAX}+` : party}
                 </span>
                 <span className="mt-1 font-sans text-[0.5625rem] tracking-[0.22em] uppercase text-navy/50">
@@ -360,7 +360,7 @@ export default function ReserveMock({
                 type="button"
                 aria-label="More guests"
                 onClick={() => setParty((p) => Math.min(ONLINE_PARTY_MAX + 1, p + 1))}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-navy/25 text-lg text-navy transition-colors duration-300 hover:border-navy/60"
+                className="flex h-12 w-12 items-center justify-center rounded-full border border-navy/25 text-lg text-navy transition-colors duration-300 hover:border-navy/60"
               >
                 +
               </button>
@@ -439,7 +439,7 @@ export default function ReserveMock({
                       >
                         ‹
                       </button>
-                      <div className="flex max-w-[17rem] flex-wrap items-center justify-center gap-2.5">
+                      <div className="flex max-w-[18rem] flex-wrap items-center justify-center gap-2.5">
                         {page.map((s) => {
                           const parts = slotParts(s);
                           const active = hour === s;
@@ -449,13 +449,13 @@ export default function ReserveMock({
                               type="button"
                               disabled={consult === "asking"}
                               onClick={() => chooseHour(s)}
-                              className={`flex h-[4.25rem] w-[4.25rem] flex-col items-center justify-center rounded-full border transition-colors duration-300 disabled:opacity-40 ${
+                              className={`flex h-[4.5rem] w-[4.5rem] flex-col items-center justify-center rounded-full border transition-colors duration-300 disabled:opacity-40 ${
                                 active
                                   ? "border-navy bg-navy text-parchment"
                                   : "border-navy/30 text-navy hover:border-navy/70"
                               }`}
                             >
-                              <span className="font-serif text-[1.1875rem] leading-none">
+                              <span className="font-serif text-[1.25rem] leading-none">
                                 {parts.face}
                               </span>
                               <span
@@ -520,9 +520,9 @@ export default function ReserveMock({
                         key={s}
                         type="button"
                         onClick={() => chooseHour(s)}
-                        className="flex h-[4.25rem] w-[4.25rem] flex-col items-center justify-center rounded-full border border-navy/60 text-navy transition-colors duration-300 hover:bg-navy hover:text-parchment"
+                        className="flex h-[4.5rem] w-[4.5rem] flex-col items-center justify-center rounded-full border border-navy/60 text-navy transition-colors duration-300 hover:bg-navy hover:text-parchment"
                       >
-                        <span className="font-serif text-[1.1875rem] leading-none">
+                        <span className="font-serif text-[1.25rem] leading-none">
                           {parts.face}
                         </span>
                         <span className="mt-0.5 font-sans text-[0.5625rem] tracking-[0.18em] uppercase opacity-60">
