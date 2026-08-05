@@ -10,6 +10,7 @@ import {
   PHONE_DISPLAY,
   SOLD_OUT_SLOT,
   MOCK_ALTERNATIVES,
+  toDateKey,
   upcomingDays,
   speakDate,
   speakParty,
@@ -49,10 +50,32 @@ export default function ReserveMock({
 }) {
   const [days] = useState(() => upcomingDays(new Date(), 14));
 
+  // The bookable year: today through exactly twelve months ahead.
+  const [{ todayKey, horizonKey, thisMonth }] = useState(() => {
+    const now = new Date();
+    return {
+      todayKey: toDateKey(now),
+      horizonKey: toDateKey(new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())),
+      thisMonth: now.getFullYear() * 12 + now.getMonth(),
+    };
+  });
+  const inHorizon = (key: string) => key >= todayKey && key <= horizonKey;
+
   const [step, setStep] = useState<Step>("date");
   const [date, setDate] = useState<string | null>(() =>
-    initialDate && days.some((d) => d.key === initialDate) ? initialDate : null,
+    initialDate && inHorizon(initialDate) ? initialDate : null,
   );
+  /** The two layers of the date question: the fortnight, or the full year. */
+  const [dateLayer, setDateLayer] = useState<"fortnight" | "calendar">(() =>
+    initialDate && inHorizon(initialDate) && !days.some((d) => d.key === initialDate)
+      ? "calendar"
+      : "fortnight",
+  );
+  const [viewMonth, setViewMonth] = useState(() => {
+    const seed =
+      initialDate && inHorizon(initialDate) ? new Date(`${initialDate}T12:00:00`) : new Date();
+    return seed.getFullYear() * 12 + seed.getMonth();
+  });
   const [party, setParty] = useState(initialParty && initialParty >= 1 ? initialParty : 2);
   const [service, setService] = useState<"lunch" | "dinner">("dinner");
   const [slotPage, setSlotPage] = useState(0);
@@ -174,7 +197,7 @@ export default function ReserveMock({
         key={step}
         className="page-turn mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-6 py-12 text-center"
       >
-        {/* ── I. the evening ── */}
+        {/* ── I. the evening — the fortnight, or the full year ── */}
         {step === "date" && (
           <>
             <p className={eyebrow}>Reservations</p>
@@ -182,33 +205,129 @@ export default function ReserveMock({
               When shall we <em>expect you?</em>
             </h1>
 
-            <div className="mt-10 grid grid-cols-7 gap-x-1.5 gap-y-4">
-              {days.map((d) => {
-                const active = date === d.key;
-                return (
-                  <div key={d.key} className="flex flex-col items-center gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => chooseDate(d.key)}
-                      aria-label={speakDate(d.key)}
-                      className={`flex h-11 w-11 items-center justify-center rounded-full font-serif text-[1.1875rem] transition-colors duration-300 ${
-                        active ? "bg-navy text-parchment" : "text-navy hover:bg-navy/10"
-                      }`}
-                    >
-                      {d.day}
-                    </button>
-                    <span className="font-sans text-[0.5625rem] tracking-[0.14em] uppercase text-navy/45">
-                      {d.weekday}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+            {dateLayer === "fortnight" ? (
+              <div key="fortnight" className="page-turn">
+                <div className="mt-10 grid grid-cols-7 gap-x-1.5 gap-y-4">
+                  {days.map((d) => {
+                    const active = date === d.key;
+                    return (
+                      <div key={d.key} className="flex flex-col items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => chooseDate(d.key)}
+                          aria-label={speakDate(d.key)}
+                          className={`flex h-11 w-11 items-center justify-center rounded-full font-serif text-[1.1875rem] transition-colors duration-300 ${
+                            active ? "bg-navy text-parchment" : "text-navy hover:bg-navy/10"
+                          }`}
+                        >
+                          {d.day}
+                        </button>
+                        <span className="font-sans text-[0.5625rem] tracking-[0.14em] uppercase text-navy/45">
+                          {d.weekday}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
 
-            <p className={`mt-10 max-w-xs ${hint}`}>
-              Further ahead than the fortnight? The house takes the telephone
-              for distant dates: {PHONE_DISPLAY}.
-            </p>
+                <p className="mt-10">
+                  <button
+                    type="button"
+                    onClick={() => setDateLayer("calendar")}
+                    className={quietAction}
+                  >
+                    Planning further ahead?
+                  </button>
+                </p>
+              </div>
+            ) : (
+              <div key="calendar" className="page-turn mt-9 w-full max-w-xs">
+                {/* one month at a time — the year is twelve pages */}
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    aria-label="Earlier month"
+                    disabled={viewMonth <= thisMonth}
+                    onClick={() => setViewMonth((m) => Math.max(thisMonth, m - 1))}
+                    className="flex h-11 w-11 items-center justify-center text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25"
+                  >
+                    ‹
+                  </button>
+                  <span className="font-serif text-2xl text-navy">
+                    {new Date(Math.floor(viewMonth / 12), viewMonth % 12, 1).toLocaleString(
+                      "en-GB",
+                      { month: "long" },
+                    )}{" "}
+                    {Math.floor(viewMonth / 12)}
+                  </span>
+                  <button
+                    type="button"
+                    aria-label="Later month"
+                    disabled={viewMonth >= thisMonth + 12}
+                    onClick={() => setViewMonth((m) => Math.min(thisMonth + 12, m + 1))}
+                    className="flex h-11 w-11 items-center justify-center text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25"
+                  >
+                    ›
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-7 gap-x-0.5 gap-y-1.5">
+                  {["M", "T", "W", "T", "F", "S", "S"].map((wd, i) => (
+                    <span
+                      key={`${wd}${i}`}
+                      className="font-sans text-[0.5625rem] tracking-[0.14em] uppercase text-navy/40"
+                    >
+                      {wd}
+                    </span>
+                  ))}
+                  {(() => {
+                    const year = Math.floor(viewMonth / 12);
+                    const month = viewMonth % 12;
+                    const lead = (new Date(year, month, 1).getDay() + 6) % 7; // Monday first
+                    const count = new Date(year, month + 1, 0).getDate();
+                    return [
+                      ...Array.from({ length: lead }, (_, i) => <span key={`lead-${i}`} />),
+                      ...Array.from({ length: count }, (_, i) => {
+                        const key = toDateKey(new Date(year, month, i + 1));
+                        const open = inHorizon(key);
+                        const active = date === key;
+                        return (
+                          <button
+                            key={key}
+                            type="button"
+                            disabled={!open}
+                            onClick={() => chooseDate(key)}
+                            aria-label={speakDate(key)}
+                            className={`mx-auto flex h-11 w-11 items-center justify-center rounded-full font-serif text-[1.1875rem] transition-colors duration-300 ${
+                              active
+                                ? "bg-navy text-parchment"
+                                : open
+                                  ? "text-navy hover:bg-navy/10"
+                                  : "text-navy/25"
+                            }`}
+                          >
+                            {i + 1}
+                          </button>
+                        );
+                      }),
+                    ];
+                  })()}
+                </div>
+
+                <p className="mt-8">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDateLayer("fortnight");
+                      setViewMonth(thisMonth);
+                    }}
+                    className={quietAction}
+                  >
+                    Nearer dates
+                  </button>
+                </p>
+              </div>
+            )}
           </>
         )}
 
