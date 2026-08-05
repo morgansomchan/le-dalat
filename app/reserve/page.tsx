@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ReserveMock from "@/components/reserve/ReserveMock";
+import { reserveSerif } from "@/components/reserve/serif-font";
 
 export const metadata: Metadata = {
   title: "Reserve a Table — Le Dalat, Bangkok",
@@ -25,7 +26,7 @@ export default async function ReservePage({
   const party = Number.isInteger(partyRaw) && partyRaw > 0 ? partyRaw : null;
 
   return (
-    <main className="min-h-svh bg-umber-deep">
+    <main className={`reserve-light min-h-svh ${reserveSerif.variable}`}>
       <ReserveMock initialDate={date} initialParty={party} />
     </main>
   );

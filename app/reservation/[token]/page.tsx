@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ManageMock from "@/components/reserve/ManageMock";
+import { reserveSerif } from "@/components/reserve/serif-font";
 
 export const metadata: Metadata = {
   title: "Your Reservation — Le Dalat, Bangkok",
@@ -17,7 +18,7 @@ export default async function ManagePage({
 }) {
   const { token } = await params;
   return (
-    <main className="min-h-svh bg-umber-deep">
+    <main className={`reserve-light min-h-svh ${reserveSerif.variable}`}>
       <ManageMock known={token === "sample-token"} />
     </main>
   );

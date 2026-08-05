@@ -673,14 +673,33 @@ body {
 }
 
 
-/* ── /reserve mock — screens settle like the homepage reveals ── */
-.reserve-screen {
-  animation: reserve-settle 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+/* ── /reserve — the daylight room (Gate 5A revision) ──────────────────
+   Parchment light theme, one question per screen, the circle as motif.
+   Scoped under .reserve-light; Cormorant Garamond swaps in for the
+   serif inside this scope only. */
+.reserve-light {
+  --font-serif: var(--font-reserve-serif);
+  background-color: var(--color-parchment);
+  color: var(--color-navy);
 }
-@keyframes reserve-settle {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+.reserve-light ::selection {
+  background-color: var(--color-navy);
+  color: var(--color-parchment);
+}
+.reserve-light :focus-visible {
+  outline: 1.5px solid color-mix(in srgb, var(--color-navy) 60%, transparent);
+  outline-offset: 3px;
+}
+
+/* Turning a page: the outgoing question has already gone; the incoming
+   one settles in from the right, soft and unhurried. */
+.page-turn {
+  animation: page-turn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes page-turn {
+  from { opacity: 0; transform: translateX(22px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .reserve-screen { animation: none; }
+  .page-turn { animation: none; }
 }
