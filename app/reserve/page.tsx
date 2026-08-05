@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import ReserveMock from "@/components/reserve/ReserveMock";
+import ReserveFlow from "@/components/reserve/ReserveFlow";
 import { reserveSerif } from "@/components/reserve/serif-font";
 
 export const metadata: Metadata = {
@@ -9,7 +9,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * /reserve — GATE 5A DESIGN MOCKUP (no backend). Accepts the homepage
+ * /reserve — the booking flow, wired to the engine (Gate 5B). Accepts the homepage
  * widget's handoff (?date=YYYY-MM-DD&party=N; legacy ?guests= honoured)
  * and works equally when opened bare.
  */
@@ -27,7 +27,7 @@ export default async function ReservePage({
 
   return (
     <main className={`reserve-light min-h-svh ${reserveSerif.variable}`}>
-      <ReserveMock initialDate={date} initialParty={party} />
+      <ReserveFlow initialDate={date} initialParty={party} />
     </main>
   );
 }

@@ -11,13 +11,6 @@ export const ONLINE_PARTY_MAX = 10;
 /* PLACEHOLDER — the family's number awaits confirmation (project_context). */
 export const PHONE_DISPLAY = "+66 · — (number pending)";
 
-/**
- * MOCK RULE (so every state is walkable): 7:30 pm is always fully
- * seated — pick it to see the sold-out path. Every other hour is free.
- */
-export const SOLD_OUT_SLOT = "19:30";
-export const MOCK_ALTERNATIVES = ["19:00", "20:00", "20:30"];
-
 export function fmtSlot(slot: string): string {
   const [h, m] = slot.split(":").map(Number);
   const suffix = h < 12 ? "am" : "pm";

@@ -8,29 +8,36 @@ import {
   DINNER_SLOTS,
   ONLINE_PARTY_MAX,
   PHONE_DISPLAY,
-  SOLD_OUT_SLOT,
-  MOCK_ALTERNATIVES,
   toDateKey,
   upcomingDays,
   speakDate,
   speakParty,
 } from "@/lib/reserve-mock";
+import {
+  checkAvailability,
+  createReservation,
+  normalizePhone,
+} from "@/lib/reserve-engine";
 
 /**
- * GATE 5A REVISION — DESIGN MOCKUP, daylight edition. No Supabase, no
- * availability logic; hardcoded data and staged delays. Mock rule:
- * 7:30 pm is always "fully seated"; every other hour is free.
- *
- * The room: the homepage's parchment, medallion-navy ink, one question
- * per screen, the circle as the recurring motif. Jade appears only on
- * the single primary confirm and the success state; gold only as gilt —
- * an eyebrow, the seal's thin ring. The serif asks; the sans serves.
+ * GATE 5B — the blessed daylight flow, wired to the real engine. The
+ * design is frozen; only the data underneath changed. The contract has
+ * no list-the-open-hours call, so the time step probes each hour of the
+ * chosen service through check_availability and offers ONLY the open
+ * ones as medallions — never counts, never occupancy. Taps re-verify;
+ * create_reservation is atomic and its refusal (the race) returns the
+ * guest to freshly checked hours.
  */
 
 type Step = "date" | "party" | "time" | "seating" | "details" | "done";
 const STEPS: Step[] = ["date", "party", "time", "seating", "details", "done"];
 
 type Consult = "idle" | "asking" | "soldout";
+
+type Offers =
+  | { status: "loading" }
+  | { status: "ready"; open: string[]; alts: string[] }
+  | { status: "error" };
 
 const PHONE_CODES = ["+66", "+1", "+33", "+44", "+65", "+81", "+86"];
 
@@ -41,7 +48,7 @@ function slotParts(slot: string): { face: string; meridiem: "am" | "pm" } {
   return { face: `${h12}:${String(m).padStart(2, "0")}`, meridiem: h < 12 ? "am" : "pm" };
 }
 
-export default function ReserveMock({
+export default function ReserveFlow({
   initialDate,
   initialParty,
 }: {
@@ -81,6 +88,7 @@ export default function ReserveMock({
   const [slotPage, setSlotPage] = useState(0);
   const [hour, setHour] = useState<string | null>(null);
   const [consult, setConsult] = useState<Consult>("idle");
+  const [alternatives, setAlternatives] = useState<string[]>([]);
   const [seating, setSeating] = useState<"house" | "madams">("house");
 
   const [name, setName] = useState("");
@@ -90,6 +98,8 @@ export default function ReserveMock({
   const [note, setNote] = useState("");
   const [touched, setTouched] = useState<{ [k: string]: boolean }>({});
   const [settingTable, setSettingTable] = useState(false);
+  const [submitError, setSubmitError] = useState(false);
+  const [reference, setReference] = useState<string | null>(null);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -108,23 +118,91 @@ export default function ReserveMock({
 
   const tooLarge = party > ONLINE_PARTY_MAX;
 
+  /* ── the real offers: probe each hour of the active service ──────── */
+
+  const offersKey = `${date}|${party}|${service}`;
+  const [offers, setOffers] = useState<{ key: string; state: Offers } | null>(null);
+  const offersState: Offers =
+    offers?.key === offersKey ? offers.state : { status: "loading" };
+
+  useEffect(() => {
+    if (step !== "time" || !date || tooLarge) return;
+    if (offers?.key === offersKey && offers.state.status !== "error") return;
+    const key = offersKey;
+    let cancelled = false;
+    (async () => {
+      try {
+        const slots = service === "lunch" ? LUNCH_SLOTS : DINNER_SLOTS;
+        const results = await Promise.all(
+          slots.map((s) => checkAvailability(date, s, party)),
+        );
+        if (cancelled) return;
+        const open = slots.filter((_, i) => results[i].available);
+        const alts =
+          results.map((r) => r.alternatives ?? []).find((a) => a.length > 0) ?? [];
+        setOffers({ key, state: { status: "ready", open, alts } });
+        if (open.length === 0) {
+          setAlternatives(alts);
+          setConsult("soldout");
+        }
+      } catch {
+        if (!cancelled) setOffers({ key, state: { status: "error" } });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, offersKey, offers]);
+
   /* selections advance like turning a page — a beat to see the choice land */
   const chooseDate = (key: string) => {
     setDate(key);
+    setHour(null);
+    setConsult("idle");
     later(340, () => go("party"));
   };
 
+  const bumpParty = (next: number) => {
+    setParty(next);
+    setHour(null);
+    setConsult("idle");
+  };
+
+  /** A tap is a promise to check: the book is asked again, freshly. */
   const chooseHour = (slot: string) => {
+    if (!date) return;
     setHour(slot);
     setConsult("asking");
-    later(1200, () => {
-      if (slot === SOLD_OUT_SLOT) {
-        setConsult("soldout");
-      } else {
+    void (async () => {
+      try {
+        const verdict = await checkAvailability(date, slot, party);
+        if (verdict.available) {
+          setConsult("idle");
+          go("seating");
+        } else {
+          // taken between the probe and the tap — offer what remains
+          setAlternatives(verdict.alternatives ?? []);
+          setHour(null);
+          setConsult("soldout");
+          setOffers(null);
+        }
+      } catch {
+        setHour(null);
         setConsult("idle");
-        go("seating");
+        setOffers({ key: offersKey, state: { status: "error" } });
       }
-    });
+    })();
+  };
+
+  const leaveSoldout = () => {
+    setConsult("idle");
+    setHour(null);
+    // if this service is spoken for, open the other one
+    if (offersState.status === "ready" && offersState.open.length === 0) {
+      setService((s) => (s === "lunch" ? "dinner" : "lunch"));
+      setSlotPage(0);
+    }
   };
 
   const chooseSeating = (value: "house" | "madams") => {
@@ -132,12 +210,41 @@ export default function ReserveMock({
     later(340, () => go("details"));
   };
 
+  /* ── the atomic write; its refusal is the race, handled warmly ───── */
+
   const reserve = () => {
+    if (!date || !hour || settingTable) return;
     setSettingTable(true);
-    later(1300, () => {
-      setSettingTable(false);
-      go("done");
-    });
+    setSubmitError(false);
+    void (async () => {
+      try {
+        const result = await createReservation({
+          date,
+          time: hour,
+          party,
+          name: name.trim(),
+          phone: normalizePhone(phoneCode, phone),
+          email: email.trim() || null,
+          note: note.trim() || null,
+          seatingPref: seating === "madams" ? "madams_room" : null,
+        });
+        if (result.success) {
+          setReference(`LD-${result.reservation_id.slice(-4).toUpperCase()}`);
+          go("done");
+          return;
+        }
+        // someone reached the same table first — engine refused atomically
+        setAlternatives(result.alternatives ?? []);
+        setHour(null);
+        setConsult("soldout");
+        setOffers(null);
+        go("time");
+      } catch {
+        setSubmitError(true);
+      } finally {
+        setSettingTable(false);
+      }
+    })();
   };
 
   const phoneDigits = phone.replace(/\D/g, "");
@@ -168,6 +275,35 @@ export default function ReserveMock({
     );
 
   const stepIndex = STEPS.indexOf(step);
+
+  const medallion = (slot: string, ring: "offer" | "alt") => {
+    const parts = slotParts(slot);
+    const active = hour === slot;
+    return (
+      <button
+        key={slot}
+        type="button"
+        disabled={consult === "asking"}
+        onClick={() => chooseHour(slot)}
+        className={`flex h-[4.5rem] w-[4.5rem] flex-col items-center justify-center rounded-full border transition-colors duration-300 disabled:opacity-40 ${
+          active
+            ? "border-navy bg-navy text-parchment"
+            : ring === "alt"
+              ? "border-navy/60 text-navy hover:bg-navy hover:text-parchment"
+              : "border-navy/30 text-navy hover:border-navy/70"
+        }`}
+      >
+        <span className="font-serif text-[1.25rem] leading-none">{parts.face}</span>
+        <span
+          className={`mt-0.5 font-sans text-[0.5625rem] tracking-[0.18em] uppercase ${
+            active ? "text-parchment/70" : ring === "alt" ? "opacity-60" : "text-navy/50"
+          }`}
+        >
+          {parts.meridiem}
+        </span>
+      </button>
+    );
+  };
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -343,7 +479,7 @@ export default function ReserveMock({
               <button
                 type="button"
                 aria-label="Fewer guests"
-                onClick={() => setParty((p) => Math.max(1, p - 1))}
+                onClick={() => bumpParty(Math.max(1, party - 1))}
                 className="flex h-12 w-12 items-center justify-center rounded-full border border-navy/25 text-lg text-navy transition-colors duration-300 hover:border-navy/60"
               >
                 −
@@ -359,7 +495,7 @@ export default function ReserveMock({
               <button
                 type="button"
                 aria-label="More guests"
-                onClick={() => setParty((p) => Math.min(ONLINE_PARTY_MAX + 1, p + 1))}
+                onClick={() => bumpParty(Math.min(ONLINE_PARTY_MAX + 1, party + 1))}
                 className="flex h-12 w-12 items-center justify-center rounded-full border border-navy/25 text-lg text-navy transition-colors duration-300 hover:border-navy/60"
               >
                 +
@@ -387,7 +523,7 @@ export default function ReserveMock({
           </>
         )}
 
-        {/* ── III. the hour ── */}
+        {/* ── III. the hour — real offerings from the book ── */}
         {step === "time" && (
           <>
             <p className={eyebrow}>
@@ -408,6 +544,7 @@ export default function ReserveMock({
                       onClick={() => {
                         setService(svc);
                         setSlotPage(0);
+                        setHour(null);
                       }}
                       className={`border-b pb-1 font-sans text-[0.6875rem] tracking-[0.25em] uppercase transition-colors duration-300 ${
                         service === svc
@@ -420,73 +557,69 @@ export default function ReserveMock({
                   ))}
                 </div>
 
-                {/* hours as offerings — a handful at a time, round medallions */}
-                {(() => {
-                  const slots = service === "lunch" ? LUNCH_SLOTS : DINNER_SLOTS;
-                  const pages: string[][] = [];
-                  for (let i = 0; i < slots.length; i += 5) pages.push(slots.slice(i, i + 5));
-                  const page = pages[Math.min(slotPage, pages.length - 1)];
-                  return (
-                    <div className="mt-8 flex items-center gap-3">
-                      <button
-                        type="button"
-                        aria-label="Earlier hours"
-                        disabled={slotPage === 0}
-                        onClick={() => setSlotPage((p) => Math.max(0, p - 1))}
-                        className={`text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25 ${
-                          pages.length > 1 ? "" : "invisible"
-                        }`}
-                      >
-                        ‹
-                      </button>
-                      <div className="flex max-w-[18rem] flex-wrap items-center justify-center gap-2.5">
-                        {page.map((s) => {
-                          const parts = slotParts(s);
-                          const active = hour === s;
-                          return (
-                            <button
-                              key={s}
-                              type="button"
-                              disabled={consult === "asking"}
-                              onClick={() => chooseHour(s)}
-                              className={`flex h-[4.5rem] w-[4.5rem] flex-col items-center justify-center rounded-full border transition-colors duration-300 disabled:opacity-40 ${
-                                active
-                                  ? "border-navy bg-navy text-parchment"
-                                  : "border-navy/30 text-navy hover:border-navy/70"
-                              }`}
-                            >
-                              <span className="font-serif text-[1.25rem] leading-none">
-                                {parts.face}
-                              </span>
-                              <span
-                                className={`mt-0.5 font-sans text-[0.5625rem] tracking-[0.18em] uppercase ${
-                                  active ? "text-parchment/70" : "text-navy/50"
-                                }`}
-                              >
-                                {parts.meridiem}
-                              </span>
-                            </button>
-                          );
-                        })}
+                {/* the open hours as offerings — a handful at a time */}
+                {offersState.status === "ready" && offersState.open.length > 0 && (
+                  (() => {
+                    const pages: string[][] = [];
+                    for (let i = 0; i < offersState.open.length; i += 5) {
+                      pages.push(offersState.open.slice(i, i + 5));
+                    }
+                    const page = pages[Math.min(slotPage, pages.length - 1)];
+                    return (
+                      <div className="mt-8 flex items-center gap-3">
+                        <button
+                          type="button"
+                          aria-label="Earlier hours"
+                          disabled={slotPage === 0}
+                          onClick={() => setSlotPage((p) => Math.max(0, p - 1))}
+                          className={`text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25 ${
+                            pages.length > 1 ? "" : "invisible"
+                          }`}
+                        >
+                          ‹
+                        </button>
+                        <div className="flex max-w-[18rem] flex-wrap items-center justify-center gap-2.5">
+                          {page.map((s) => medallion(s, "offer"))}
+                        </div>
+                        <button
+                          type="button"
+                          aria-label="Later hours"
+                          disabled={slotPage >= pages.length - 1}
+                          onClick={() => setSlotPage((p) => p + 1)}
+                          className={`text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25 ${
+                            pages.length > 1 ? "" : "invisible"
+                          }`}
+                        >
+                          ›
+                        </button>
                       </div>
-                      <button
-                        type="button"
-                        aria-label="Later hours"
-                        disabled={slotPage >= pages.length - 1}
-                        onClick={() => setSlotPage((p) => p + 1)}
-                        className={`text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25 ${
-                          pages.length > 1 ? "" : "invisible"
-                        }`}
-                      >
-                        ›
-                      </button>
-                    </div>
-                  );
-                })()}
+                    );
+                  })()
+                )}
+
+                {/* the book cannot be reached — quiet, with a way back in */}
+                {offersState.status === "error" && (
+                  <div className="mt-8">
+                    <p className="font-serif text-xl italic leading-relaxed text-clay">
+                      The book cannot be reached just now.
+                    </p>
+                    <p className={`mx-auto mt-2 max-w-xs ${hint}`}>
+                      Nothing was reserved. Please try again in a moment, or
+                      telephone the house: {PHONE_DISPLAY}.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setOffers(null)}
+                      className={`mt-6 ${quietAction}`}
+                    >
+                      Ask again
+                    </button>
+                  </div>
+                )}
 
                 {/* the designed wait — three quiet dots, no spinners */}
                 <div className="mt-8 h-6" aria-live="polite">
-                  {consult === "asking" && (
+                  {(offersState.status === "loading" || consult === "asking") && (
                     <span className="inline-flex items-center gap-2.5">
                       <span className={hint}>Asking the book</span>
                       {[0, 1, 2].map((i) => (
@@ -502,48 +635,26 @@ export default function ReserveMock({
               </>
             )}
 
-            {/* sold out — warm, with offerings close by */}
+            {/* fully seated — warm, with the engine's own offerings close by */}
             {consult === "soldout" && (
               <div className="mt-9" aria-live="polite">
                 <p className="font-serif text-xl italic leading-relaxed text-clay">
                   That hour is fully seated.
                 </p>
                 <p className={`mx-auto mt-2 max-w-xs ${hint}`}>
-                  The book fills quickly some evenings. Close by, the house can
-                  still offer:
+                  The book fills quickly some evenings.
+                  {alternatives.length > 0 && " Close by, the house can still offer:"}
                 </p>
-                <div className="mt-6 flex items-center justify-center gap-2.5">
-                  {MOCK_ALTERNATIVES.map((s) => {
-                    const parts = slotParts(s);
-                    return (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => chooseHour(s)}
-                        className="flex h-[4.5rem] w-[4.5rem] flex-col items-center justify-center rounded-full border border-navy/60 text-navy transition-colors duration-300 hover:bg-navy hover:text-parchment"
-                      >
-                        <span className="font-serif text-[1.25rem] leading-none">
-                          {parts.face}
-                        </span>
-                        <span className="mt-0.5 font-sans text-[0.5625rem] tracking-[0.18em] uppercase opacity-60">
-                          {parts.meridiem}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                {alternatives.length > 0 && (
+                  <div className="mt-6 flex items-center justify-center gap-2.5">
+                    {alternatives.map((s) => medallion(s, "alt"))}
+                  </div>
+                )}
                 <p className={`mx-auto mt-7 max-w-xs ${hint}`}>
                   Or step back and choose another evening. For anything the
                   book cannot hold: {PHONE_DISPLAY}.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setConsult("idle");
-                    setHour(null);
-                  }}
-                  className={`mt-6 ${quietAction}`}
-                >
+                <button type="button" onClick={leaveSoldout} className={`mt-6 ${quietAction}`}>
                   Choose a different hour
                 </button>
               </div>
@@ -718,6 +829,13 @@ export default function ReserveMock({
                 />
               </label>
 
+              {submitError && (
+                <p className="mt-6 text-center font-sans text-xs leading-relaxed text-clay">
+                  The book cannot be reached just now — nothing was reserved.
+                  Please try once more.
+                </p>
+              )}
+
               {/* the single jade action */}
               <button
                 type="button"
@@ -746,10 +864,12 @@ export default function ReserveMock({
               expecting you.
             </p>
 
-            {/* the seal: the reference inside a drawn circle, gilt-ringed */}
+            {/* the seal: the real reference inside a drawn circle */}
             <div className="mt-10 flex h-36 w-36 items-center justify-center rounded-full border border-gold/70 p-2">
               <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-navy/15">
-                <span className="font-serif text-2xl tracking-wide text-navy">LD-8R2N</span>
+                <span className="font-serif text-2xl tracking-wide text-navy">
+                  {reference ?? "—"}
+                </span>
                 <span className="mt-1 font-sans text-[0.5625rem] tracking-[0.25em] uppercase text-navy/50">
                   Reference
                 </span>
