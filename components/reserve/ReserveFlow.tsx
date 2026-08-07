@@ -104,6 +104,7 @@ export default function ReserveFlow({
   const [settingTable, setSettingTable] = useState(false);
   const [submitError, setSubmitError] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
+  const [manageToken, setManageToken] = useState<string | null>(null);
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   useEffect(() => () => {
@@ -239,6 +240,7 @@ export default function ReserveFlow({
         });
         if (result.success) {
           setReference(`LD-${result.reservation_id.slice(-4).toUpperCase()}`);
+          setManageToken(result.manage_token);
           go("done");
           return;
         }
@@ -933,13 +935,20 @@ export default function ReserveFlow({
             <p className={`mt-9 max-w-sm ${hint}`}>
               What happens next: nothing is asked of you. The family holds
               this table for two hours from your chosen hour. If your evening
-              changes, the link in your confirmation lets you release it — or
-              telephone the house: {PHONE_DISPLAY}.
+              changes, the link below lets you release it — or telephone the
+              house: {PHONE_DISPLAY}.
             </p>
 
-            <Link href="/" className={`mt-10 ${quietAction}`}>
-              Return to the garden
-            </Link>
+            <div className="mt-10 flex flex-col items-center gap-5">
+              {manageToken && (
+                <Link href={`/reservation/${manageToken}`} className={quietAction}>
+                  Manage this reservation
+                </Link>
+              )}
+              <Link href="/" className={quietAction}>
+                Return to the garden
+              </Link>
+            </div>
           </>
         )}
       </main>

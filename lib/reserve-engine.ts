@@ -52,7 +52,14 @@ export async function checkAvailability(
 }
 
 export type CreateResult =
-  | { success: true; reservation_id: string; tables: string[]; zone: string }
+  | {
+      success: true;
+      reservation_id: string;
+      /** The guest's only access to this booking — carried to /reservation/[token]. */
+      manage_token: string;
+      tables: string[];
+      zone: string;
+    }
   | { success: false; reason?: string; alternatives?: string[]; arrange?: boolean };
 
 export async function createReservation(args: {
@@ -88,4 +95,42 @@ export async function createReservation(args: {
 export function normalizePhone(code: string, national: string): string {
   const digits = national.replace(/\D/g, "").replace(/^0/, "");
   return `${code}${digits}`;
+}
+
+/* ── the manage page's two calls (Amendment 2) ─────────────────────── */
+
+export type ManagedReservation =
+  | { found: false }
+  | {
+      found: true;
+      status: "confirmed" | "seated" | "done" | "no_show" | "cancelled";
+      res_date: string;
+      res_time: string;
+      party_size: number;
+      seating_pref: string | null;
+      first_name: string | null;
+      reference: string;
+    };
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function getReservationByToken(token: string): Promise<ManagedReservation> {
+  // A malformed token is simply an unknown one — never a different answer.
+  if (!UUID_RE.test(token)) return { found: false };
+  const { data, error } = await supabase.rpc("get_reservation_by_token", {
+    p_token: token,
+  });
+  if (error) throw new Error(error.message);
+  return data as ManagedReservation;
+}
+
+export async function cancelReservationByToken(
+  token: string,
+): Promise<{ success: boolean; reason?: string }> {
+  if (!UUID_RE.test(token)) return { success: false, reason: "unknown" };
+  const { data, error } = await supabase.rpc("cancel_reservation_by_token", {
+    p_token: token,
+  });
+  if (error) throw new Error(error.message);
+  return data as { success: boolean; reason?: string };
 }

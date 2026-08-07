@@ -68,16 +68,3 @@ export function speakParty(n: number): string {
   return `${words[n] ?? n} ${n === 1 ? "guest" : "guests"}`;
 }
 
-/** Sample booking behind /reservation/sample-token — hardcoded. */
-export function sampleBooking() {
-  const d = new Date();
-  const evening = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 9);
-  return {
-    reference: "LD-4K7M",
-    date: toDateKey(evening),
-    time: "20:00",
-    party: 4,
-    name: "Alexandra", // sample guest — first name only, per privacy doctrine
-    seating: "Chosen by the house",
-  };
-}
