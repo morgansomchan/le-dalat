@@ -22,6 +22,7 @@ export interface Availability {
   reason?:
     | "no_fit"
     | "party_too_large"
+    | "party_needs_arrangement"
     | "blocked"
     | "outside_service_window"
     | "past"

@@ -36,7 +36,7 @@ type Consult = "idle" | "asking" | "soldout";
 
 type Offers =
   | { status: "loading" }
-  | { status: "ready"; open: string[]; alts: string[] }
+  | { status: "ready"; open: string[]; alts: string[]; arrange: boolean }
   | { status: "error" };
 
 const PHONE_CODES = ["+66", "+1", "+33", "+44", "+65", "+81", "+86"];
@@ -89,6 +89,8 @@ export default function ReserveFlow({
   const [hour, setHour] = useState<string | null>(null);
   const [consult, setConsult] = useState<Consult>("idle");
   const [alternatives, setAlternatives] = useState<string[]>([]);
+  /** The hour whose tap was refused — null when a whole service opened empty. */
+  const [soldHour, setSoldHour] = useState<string | null>(null);
   const [seating, setSeating] = useState<"house" | "madams">("house");
 
   const [name, setName] = useState("");
@@ -140,9 +142,11 @@ export default function ReserveFlow({
         const open = slots.filter((_, i) => results[i].available);
         const alts =
           results.map((r) => r.alternatives ?? []).find((a) => a.length > 0) ?? [];
-        setOffers({ key, state: { status: "ready", open, alts } });
-        if (open.length === 0) {
+        const arrange = results.some((r) => r.reason === "party_needs_arrangement");
+        setOffers({ key, state: { status: "ready", open, alts, arrange } });
+        if (open.length === 0 && !arrange) {
           setAlternatives(alts);
+          setSoldHour(null);
           setConsult("soldout");
         }
       } catch {
@@ -183,6 +187,7 @@ export default function ReserveFlow({
         } else {
           // taken between the probe and the tap — offer what remains
           setAlternatives(verdict.alternatives ?? []);
+          setSoldHour(slot);
           setHour(null);
           setConsult("soldout");
           setOffers(null);
@@ -235,6 +240,7 @@ export default function ReserveFlow({
         }
         // someone reached the same table first — engine refused atomically
         setAlternatives(result.alternatives ?? []);
+        setSoldHour(hour);
         setHour(null);
         setConsult("soldout");
         setOffers(null);
@@ -533,6 +539,22 @@ export default function ReserveFlow({
               What hour <em>suits?</em>
             </h1>
 
+            {offersState.status === "ready" && offersState.arrange ? (
+              /* Amendment 1 copy rule: a size no layout covers is never
+                 "fully seated" — the room can often be arranged */
+              <div className="mt-9 max-w-sm">
+                <p className="font-serif text-xl italic leading-relaxed text-navy">
+                  A table of {speakParty(party).replace(/ guests?/, "")} needs arranging.
+                </p>
+                <p className={`mt-3 ${hint}`}>
+                  The room can often be arranged for larger groups — tables
+                  drawn together, the private room, the family deciding the
+                  evening. Telephone the house and it will be a pleasure:
+                </p>
+                <p className="mt-4 font-serif text-lg text-navy">{PHONE_DISPLAY}</p>
+              </div>
+            ) : (
+              <>
             {consult !== "soldout" && (
               <>
                 {/* the two services — a quiet pair of words */}
@@ -639,7 +661,7 @@ export default function ReserveFlow({
             {consult === "soldout" && (
               <div className="mt-9" aria-live="polite">
                 <p className="font-serif text-xl italic leading-relaxed text-clay">
-                  That hour is fully seated.
+                  {soldHour ? "That hour is fully seated." : "That evening is nearly full."}
                 </p>
                 <p className={`mx-auto mt-2 max-w-xs ${hint}`}>
                   The book fills quickly some evenings.
@@ -658,6 +680,8 @@ export default function ReserveFlow({
                   Choose a different hour
                 </button>
               </div>
+            )}
+              </>
             )}
           </>
         )}
