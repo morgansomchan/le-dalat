@@ -76,7 +76,7 @@ export default function ManageMock({ known }: { known: boolean }) {
               or arrived incomplete. Your confirmation email holds the true
               one, and the telephone always works: {PHONE_DISPLAY}.
             </p>
-            <Link href="/reserve" className={`mt-10 ${quietAction}`}>
+            <Link href="/reservation" className={`mt-10 ${quietAction}`}>
               Make a new reservation
             </Link>
           </>
@@ -160,7 +160,7 @@ export default function ManageMock({ known }: { known: boolean }) {
               will shine for someone else. The house hopes to set your table
               another night.
             </p>
-            <Link href="/reserve" className={`mt-10 ${quietAction}`}>
+            <Link href="/reservation" className={`mt-10 ${quietAction}`}>
               Choose another evening
             </Link>
           </>

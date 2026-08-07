@@ -1,33 +1,20 @@
-import type { Metadata } from "next";
-import ReserveFlow from "@/components/reserve/ReserveFlow";
-import { reserveSerif } from "@/components/reserve/serif-font";
-
-export const metadata: Metadata = {
-  title: "Reserve a Table — Le Dalat, Bangkok",
-  description:
-    "Reserve an evening at Le Dalat: Vietnamese fine dining in a wooden villa on Sukhumvit Soi 23, family run since 1983.",
-};
+import { redirect } from "next/navigation";
 
 /**
- * /reserve — the booking flow, wired to the engine (Gate 5B). Accepts the homepage
- * widget's handoff (?date=YYYY-MM-DD&party=N; legacy ?guests= honoured)
- * and works equally when opened bare.
+ * The flow's old address — forward saved links to /reservation with the
+ * handoff params intact.
  */
-export default async function ReservePage({
+export default async function ReserveRedirect({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
-
-  const date = one(params.date)?.match(/^\d{4}-\d{2}-\d{2}$/) ? one(params.date)! : null;
-  const partyRaw = Number(one(params.party) ?? one(params.guests));
-  const party = Number.isInteger(partyRaw) && partyRaw > 0 ? partyRaw : null;
-
-  return (
-    <main className={`reserve-light min-h-svh ${reserveSerif.variable}`}>
-      <ReserveFlow initialDate={date} initialParty={party} />
-    </main>
-  );
+  const query = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    const v = Array.isArray(value) ? value[0] : value;
+    if (v) query.set(key, v);
+  }
+  const suffix = query.size > 0 ? `?${query.toString()}` : "";
+  redirect(`/reservation${suffix}`);
 }

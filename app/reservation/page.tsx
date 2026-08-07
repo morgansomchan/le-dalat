@@ -1,26 +1,33 @@
-import Link from "next/link";
+import type { Metadata } from "next";
+import ReserveFlow from "@/components/reserve/ReserveFlow";
+import { reserveSerif } from "@/components/reserve/serif-font";
+
+export const metadata: Metadata = {
+  title: "Reserve a Table — Le Dalat, Bangkok",
+  description:
+    "Reserve an evening at Le Dalat: Vietnamese fine dining in a wooden villa on Sukhumvit Soi 23, family run since 1983.",
+};
 
 /**
- * Stub page — the reservation flow is not built in this phase (CLAUDE.md).
- * Exists only so reserve affordances on the homepage have somewhere to land.
+ * /reserve — the booking flow, wired to the engine (Gate 5B). Accepts the homepage
+ * widget's handoff (?date=YYYY-MM-DD&party=N; legacy ?guests= honoured)
+ * and works equally when opened bare.
  */
-export default function ReservationPage() {
+export default async function ReservePage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const params = await searchParams;
+  const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
+
+  const date = one(params.date)?.match(/^\d{4}-\d{2}-\d{2}$/) ? one(params.date)! : null;
+  const partyRaw = Number(one(params.party) ?? one(params.guests));
+  const party = Number.isInteger(partyRaw) && partyRaw > 0 ? partyRaw : null;
+
   return (
-    <main className="flex min-h-svh flex-col items-center justify-center bg-navy-deep px-6 text-center">
-      <p className="eyebrow">Reservations</p>
-      <h1 className="mt-6 max-w-md font-serif text-3xl text-parchment sm:text-4xl">
-        The book opens soon.
-      </h1>
-      <p className="mt-4 max-w-sm text-sm leading-relaxed text-cream/70">
-        Online reservations are on their way. For now, the family answers the
-        telephone as it always has.
-      </p>
-      <Link
-        href="/"
-        className="mt-10 inline-flex min-h-11 items-center border border-gold/40 px-5 font-sans text-[0.6875rem] tracking-[0.25em] uppercase text-gold transition-colors duration-500 hover:border-gold hover:text-parchment"
-      >
-        Return to the garden
-      </Link>
+    <main className={`reserve-light min-h-svh ${reserveSerif.variable}`}>
+      <ReserveFlow initialDate={date} initialParty={party} />
     </main>
   );
 }
