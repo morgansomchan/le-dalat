@@ -91,6 +91,8 @@ export default function ReserveFlow({
   const [alternatives, setAlternatives] = useState<string[]>([]);
   /** The hour whose tap was refused — null when a whole service opened empty. */
   const [soldHour, setSoldHour] = useState<string | null>(null);
+  /** Engine's arrange hint: this size lives on R / arranged runs only. */
+  const [soldArrange, setSoldArrange] = useState(false);
   const [seating, setSeating] = useState<"house" | "madams">("house");
 
   const [name, setName] = useState("");
@@ -147,6 +149,7 @@ export default function ReserveFlow({
         if (open.length === 0 && !arrange) {
           setAlternatives(alts);
           setSoldHour(null);
+          setSoldArrange(results.some((r) => r.arrange === true));
           setConsult("soldout");
         }
       } catch {
@@ -188,6 +191,7 @@ export default function ReserveFlow({
           // taken between the probe and the tap — offer what remains
           setAlternatives(verdict.alternatives ?? []);
           setSoldHour(slot);
+          setSoldArrange(verdict.arrange === true);
           setHour(null);
           setConsult("soldout");
           setOffers(null);
@@ -241,6 +245,7 @@ export default function ReserveFlow({
         // someone reached the same table first — engine refused atomically
         setAlternatives(result.alternatives ?? []);
         setSoldHour(hour);
+        setSoldArrange(result.arrange === true);
         setHour(null);
         setConsult("soldout");
         setOffers(null);
@@ -660,8 +665,16 @@ export default function ReserveFlow({
             {/* fully seated — warm, with the engine's own offerings close by */}
             {consult === "soldout" && (
               <div className="mt-9" aria-live="polite">
-                <p className="font-serif text-xl italic leading-relaxed text-clay">
-                  {soldHour ? "That hour is fully seated." : "That evening is nearly full."}
+                <p
+                  className={`font-serif text-xl italic leading-relaxed ${
+                    soldArrange ? "text-navy" : "text-clay"
+                  }`}
+                >
+                  {soldArrange
+                    ? `${soldHour ? "That hour" : "That evening"} cannot seat a party of ${speakParty(party).split(" ")[0]}.`
+                    : soldHour
+                      ? "That hour is fully seated."
+                      : "That evening is nearly full."}
                 </p>
                 <p className={`mx-auto mt-2 max-w-xs ${hint}`}>
                   The book fills quickly some evenings.
@@ -673,8 +686,9 @@ export default function ReserveFlow({
                   </div>
                 )}
                 <p className={`mx-auto mt-7 max-w-xs ${hint}`}>
-                  Or step back and choose another evening. For anything the
-                  book cannot hold: {PHONE_DISPLAY}.
+                  {soldArrange
+                    ? `Or the room can often be arranged for larger groups — the family does it gladly. Telephone the house: ${PHONE_DISPLAY}.`
+                    : `Or step back and choose another evening. For anything the book cannot hold: ${PHONE_DISPLAY}.`}
                 </p>
                 <button type="button" onClick={leaveSoldout} className={`mt-6 ${quietAction}`}>
                   Choose a different hour

@@ -30,6 +30,9 @@ export interface Availability {
     | "invalid_party";
   /** Nearest same-day hours that CAN seat the party (engine-provided). */
   alternatives?: string[];
+  /** True on no_fit when only R or an arranged run could seat this size —
+      the refusal must invite a call, never read "fully seated". */
+  arrange?: boolean;
 }
 
 export async function checkAvailability(
@@ -50,7 +53,7 @@ export async function checkAvailability(
 
 export type CreateResult =
   | { success: true; reservation_id: string; tables: string[]; zone: string }
-  | { success: false; reason?: string; alternatives?: string[] };
+  | { success: false; reason?: string; alternatives?: string[]; arrange?: boolean };
 
 export async function createReservation(args: {
   date: string;
