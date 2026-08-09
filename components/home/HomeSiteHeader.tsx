@@ -75,12 +75,17 @@ export default function HomeSiteHeader() {
   );
 
   useEffect(() => {
-    gsap.from("[data-site-header]", {
-      autoAlpha: 0,
-      duration: 1.4,
-      ease: "power2.out",
-      delay: 0.35,
+    // fromTo with an explicit end + revert on unmount: a bare gsap.from
+    // can capture a stale 0-alpha end state when the page is left and
+    // revisited, leaving the header invisible.
+    const ctx = gsap.context(() => {
+      gsap.fromTo(
+        "[data-site-header]",
+        { autoAlpha: 0 },
+        { autoAlpha: 1, duration: 1.4, ease: "power2.out", delay: 0.35 },
+      );
     });
+    return () => ctx.revert();
   }, []);
 
   useEffect(() => {

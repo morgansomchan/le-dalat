@@ -45,34 +45,6 @@ const DISH_GROUND_VAR: Record<DishAtmosphere, string> = {
   crepes: "--color-dish-crepe-cream",
 };
 
-/** Bo → crepes: step through warm browns so RGB lerp never hits purple. */
-const BO_TO_CREPE_GROUND = [
-  "#3d1824",
-  "#4a3228",
-  "#5c4030",
-  "#6e5040",
-  "#806050",
-  "#927060",
-  "#a48870",
-  "#b5a480",
-] as const;
-
-function interpolateGroundColor(
-  fromKey: DishAtmosphere,
-  toKey: DishAtmosphere,
-  t: number,
-  colors: Record<DishAtmosphere, string>,
-): string {
-  if (fromKey === "bo" && toKey === "crepes") {
-    const path = BO_TO_CREPE_GROUND;
-    const segment = t * (path.length - 1);
-    const i = Math.min(path.length - 2, Math.floor(segment));
-    const localT = segment - i;
-    return gsap.utils.interpolate(path[i], path[i + 1])(localT);
-  }
-  return gsap.utils.interpolate(colors[fromKey], colors[toKey])(t);
-}
-
 function readDishGroundColors(): Record<DishAtmosphere, string> {
   const root = getComputedStyle(document.documentElement);
   return (Object.keys(DISH_GROUND_VAR) as DishAtmosphere[]).reduce(
@@ -171,11 +143,11 @@ export default function SceneSignatureDishes() {
       const deck = scope.current?.querySelector<HTMLElement>("[data-dish-deck]");
       if (!ground || !deck) return;
 
+      // Discrete ground: the color belongs to the active dish and steps
+      // with it at the crossfade midpoint (a short CSS transition on the
+      // ground element carries the step; no scroll-linked lerp).
       const scrubDishGround = (progress: number) => {
         const colors = readDishGroundColors();
-        const segment = progress * (slides.length - 1);
-        const i = Math.min(slides.length - 2, Math.floor(segment));
-        const t = segment - i;
         const idx = Math.min(
           slides.length - 1,
           Math.round(progress * (slides.length - 1)),
@@ -183,16 +155,8 @@ export default function SceneSignatureDishes() {
         const onCrepes = idx === slides.length - 1;
         deck.toggleAttribute("data-last-dish", onCrepes);
         deck.toggleAttribute("data-crepe-melt", onCrepes);
-        if (onCrepes) {
-          ground.style.setProperty("--dish-ground", colors.crepes);
-          return;
-        }
-        const fromKey = slides[i].dataset.dishAtmosphere as DishAtmosphere;
-        const toKey = slides[i + 1].dataset.dishAtmosphere as DishAtmosphere;
-        ground.style.setProperty(
-          "--dish-ground",
-          interpolateGroundColor(fromKey, toKey, t, colors),
-        );
+        const key = slides[idx].dataset.dishAtmosphere as DishAtmosphere;
+        ground.style.setProperty("--dish-ground", colors[key]);
       };
 
       gsap.set("[data-dish-dashes]", { display: "flex" });
@@ -202,52 +166,50 @@ export default function SceneSignatureDishes() {
         gsap.set(slide, { zIndex: i === 0 ? 2 : 1, autoAlpha: i === 0 ? 1 : 0 });
       });
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: "[data-dish-deck]",
-          start: "top top",
-          end: () => "+=" + (slides.length - 1) * window.innerHeight,
-          pin: true,
-          scrub: 0.35,
-          // Discrete deck: released scroll settles on a dish, never
-          // between two — each card reads as its own stop.
-          snap: {
-            snapTo: "labels",
-            duration: { min: 0.2, max: 0.5 },
-            delay: 0.06,
-            ease: "power2.inOut",
-            // No velocity projection: settle on the nearest dish, never
-            // fling several cards ahead on one hard wheel flick.
-            inertia: false,
-          },
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-          onUpdate(self) {
-            scrubDishGround(self.progress);
-            const idx = Math.min(
-              slides.length - 1,
-              Math.round(self.progress * (slides.length - 1)),
-            );
-            dashes.forEach((d, i) => d.classList.toggle("is-active", i === idx));
-          },
+      // Discrete deck: scroll position only SELECTS a dish — each dish
+      // owns an equal share of the pinned distance, and crossing a
+      // boundary plays a quick fixed-clock crossfade. The scroll is never
+      // written to (no snap tween), so it cannot fight Lenis, and no
+      // scroll position can rest half-faded between two dishes.
+      let activeIdx = 0;
+      const showDish = (idx: number) => {
+        if (idx === activeIdx) return;
+        const from = slides[activeIdx];
+        const to = slides[idx];
+        activeIdx = idx;
+        gsap.set(to, { zIndex: 2 });
+        gsap.set(from, { zIndex: 1 });
+        gsap.to(from, {
+          autoAlpha: 0,
+          duration: 0.28,
+          ease: "power1.in",
+          overwrite: "auto",
+        });
+        gsap.to(to, {
+          autoAlpha: 1,
+          duration: 0.32,
+          ease: "power1.out",
+          overwrite: "auto",
+        });
+      };
+
+      ScrollTrigger.create({
+        trigger: "[data-dish-deck]",
+        start: "top top",
+        end: () => "+=" + (slides.length - 1) * window.innerHeight,
+        pin: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+        onUpdate(self) {
+          scrubDishGround(self.progress);
+          const idx = Math.min(
+            slides.length - 1,
+            Math.round(self.progress * (slides.length - 1)),
+          );
+          dashes.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+          showDish(idx);
         },
       });
-
-      // Long holds, short fades: most of the scroll distance is a resting
-      // dish, and the crossfade is a quick step between stops.
-      tl.addLabel("dish-0");
-      slides.slice(0, -1).forEach((slide, i) => {
-        tl.to({}, { duration: 0.78 })
-          .to(slide, { autoAlpha: 0, ease: "power1.in", duration: 0.22 })
-          .fromTo(
-            slides[i + 1],
-            { autoAlpha: 0 },
-            { autoAlpha: 1, ease: "power1.out", duration: 0.22 },
-            "<0.04",
-          );
-        tl.addLabel(`dish-${i + 1}`);
-      });
-      tl.to({}, { duration: 0.78 });
     }, scope);
 
     return () => ctx.revert();

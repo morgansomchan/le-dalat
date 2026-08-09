@@ -496,6 +496,9 @@ body {
     --dish-ground: var(--color-dish-fish-blue);
     inset: 0;
     background-color: var(--dish-ground);
+    /* The ground steps per dish (set discretely from JS); this carries
+       each step as a quick wash in time with the card crossfade */
+    transition: background-color 0.4s ease;
   }
 
   [data-dish-deck][data-crepe-melt="true"] [data-dish-ground] {
