@@ -73,6 +73,15 @@ body {
   color: var(--color-navy-deep);
 }
 
+/* Anything pressable shows the hand — the platform's arrow default on
+   <button> reads as inert text on a site this dark and quiet */
+button:not(:disabled),
+[role="button"],
+select,
+input[type="date"] {
+  cursor: pointer;
+}
+
 @layer utilities {
   /* Roman-numeral section labels: letterspaced uppercase, gold */
   .eyebrow {
