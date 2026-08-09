@@ -14,6 +14,10 @@
   --color-teak: #6b4a2e;
   --color-umber: #1c1209; /* act two ground */
   --color-umber-deep: #120b05;
+  /* EXPERIMENT — People of the House ground, brighter than umber-deep.
+     Tune this one line; the crepe fade above and the night-garden
+     handoff below follow it automatically. */
+  --color-people-ground: #55381f;
 
   /* Light surfaces & text — warm cream, never cold white */
   --color-parchment: #f4ecdc;
@@ -362,6 +366,15 @@ input[type="date"] {
     background-color: var(--color-umber-deep);
   }
 
+  /* The People experiment: these three surfaces form one continuous
+     ground (crepe fade → People → night-garden handoff). Re-pointing
+     the umber token inside them swaps all their gradient stops at once. */
+  .people-scene,
+  .dishes-scene__tail,
+  .night-garden-scene__handoff {
+    --color-umber-deep: var(--color-people-ground);
+  }
+
   .people-scene__bio {
     overflow: visible;
     white-space: normal;
@@ -394,11 +407,14 @@ input[type="date"] {
    */
   .night-garden-scene__handoff {
     position: absolute;
-    top: 0;
+    /* 2px above the section: the handoff's own antialiased top edge hides
+       under the identical People brown instead of letting the photo's
+       edge bleed through as a hairline seam */
+    top: -2px;
     right: 0;
     left: 0;
     z-index: 1;
-    height: var(--night-handoff-height);
+    height: calc(var(--night-handoff-height) + 2px);
     pointer-events: none;
     background: linear-gradient(
       180deg,
