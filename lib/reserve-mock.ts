@@ -8,8 +8,8 @@ export const LUNCH_SLOTS = ["11:30", "12:00", "12:30", "13:00", "13:30"];
 export const DINNER_SLOTS = ["17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30"];
 export const ONLINE_PARTY_MAX = 10;
 
-/* PLACEHOLDER — the family's number awaits confirmation (project_context). */
-export const PHONE_DISPLAY = "+66 · — (number pending)";
+/* The house line — 02 259 9593 in Bangkok, +66 from abroad. */
+export const PHONE_DISPLAY = "+66 2 259 9593";
 
 export function fmtSlot(slot: string): string {
   const [h, m] = slot.split(":").map(Number);

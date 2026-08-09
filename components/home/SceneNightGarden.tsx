@@ -21,9 +21,9 @@ const NIGHT_IMAGE = "/web_assets/Food/Copy of Le Dalat_20Oct20255148.jpg";
  */
 
 /*
- * PLACEHOLDER CONTENT — phone, hours, exact address and social links all
- * await confirmation (project_context.md: final hours and contact details
- * pending). Soi 23 and est. 1983 are documented.
+ * PLACEHOLDER CONTENT — hours, exact address and social links still await
+ * confirmation (project_context.md). Soi 23, est. 1983 and the telephone
+ * (02 259 9593) are confirmed.
  */
 export default function SceneNightGarden() {
   const scope = useRef<HTMLElement>(null);
@@ -175,7 +175,7 @@ export default function SceneNightGarden() {
           </button>
         </form>
 
-        {/* Practical details — all PLACEHOLDER until confirmed */}
+        {/* Practical details — address and hours PLACEHOLDER until confirmed */}
         <div className="mt-7 grid grid-cols-1 gap-6 border-t border-gold/15 pt-6 text-center sm:grid-cols-3">
           <div>
             <p className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-gold/80">
@@ -193,8 +193,10 @@ export default function SceneNightGarden() {
               Call
             </p>
             <p className="mt-2 font-sans text-xs leading-relaxed text-cream/75">
-              +66 · —
-              <span className="block text-cream/35">[number pending]</span>
+              <a href="tel:+6622599593" className="transition-colors hover:text-cream">
+                +66 2 259 9593
+              </a>
+              <span className="block text-cream/35">02 259 9593 within Thailand</span>
             </p>
           </div>
           <div>
