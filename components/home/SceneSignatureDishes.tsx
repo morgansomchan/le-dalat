@@ -208,7 +208,18 @@ export default function SceneSignatureDishes() {
           start: "top top",
           end: () => "+=" + (slides.length - 1) * window.innerHeight,
           pin: true,
-          scrub: 0.6,
+          scrub: 0.35,
+          // Discrete deck: released scroll settles on a dish, never
+          // between two — each card reads as its own stop.
+          snap: {
+            snapTo: "labels",
+            duration: { min: 0.2, max: 0.5 },
+            delay: 0.06,
+            ease: "power2.inOut",
+            // No velocity projection: settle on the nearest dish, never
+            // fling several cards ahead on one hard wheel flick.
+            inertia: false,
+          },
           anticipatePin: 1,
           invalidateOnRefresh: true,
           onUpdate(self) {
@@ -222,17 +233,21 @@ export default function SceneSignatureDishes() {
         },
       });
 
+      // Long holds, short fades: most of the scroll distance is a resting
+      // dish, and the crossfade is a quick step between stops.
+      tl.addLabel("dish-0");
       slides.slice(0, -1).forEach((slide, i) => {
-        tl.to({}, { duration: 0.6 })
-          .to(slide, { autoAlpha: 0, ease: "power1.in", duration: 0.35 })
+        tl.to({}, { duration: 0.78 })
+          .to(slide, { autoAlpha: 0, ease: "power1.in", duration: 0.22 })
           .fromTo(
             slides[i + 1],
             { autoAlpha: 0 },
-            { autoAlpha: 1, ease: "power1.out", duration: 0.35 },
-            "<0.06",
+            { autoAlpha: 1, ease: "power1.out", duration: 0.22 },
+            "<0.04",
           );
+        tl.addLabel(`dish-${i + 1}`);
       });
-      tl.to({}, { duration: 0.6 });
+      tl.to({}, { duration: 0.78 });
     }, scope);
 
     return () => ctx.revert();

@@ -21,9 +21,9 @@ const NIGHT_IMAGE = "/web_assets/Food/Copy of Le Dalat_20Oct20255148.jpg";
  */
 
 /*
- * PLACEHOLDER CONTENT — hours, exact address and social links still await
- * confirmation (project_context.md). Soi 23, est. 1983 and the telephone
- * (02 259 9593) are confirmed.
+ * Practical details all confirmed (Aug 2026): address, telephone, hours
+ * (lunch 11:30–14:30, dinner 17:30–22:00; bookable to 13:30 / 21:30) and
+ * the social links.
  */
 export default function SceneNightGarden() {
   const scope = useRef<HTMLElement>(null);
@@ -140,9 +140,9 @@ export default function SceneNightGarden() {
                 {!evening && (
                   <span
                     aria-hidden
-                    className="pointer-events-none absolute inset-y-0 left-0.5 flex items-center font-serif text-[0.9375rem] italic text-cream/42"
+                    className="pointer-events-none absolute inset-y-0 left-4 flex items-center font-serif text-base italic text-cream/42"
                   >
-                    DD / MM / YYYY
+                    Choose a date
                   </span>
                 )}
               </div>
@@ -175,16 +175,23 @@ export default function SceneNightGarden() {
           </button>
         </form>
 
-        {/* Practical details — address and hours PLACEHOLDER until confirmed */}
+        {/* Practical details — confirmed Aug 2026 */}
         <div className="mt-7 grid grid-cols-1 gap-6 border-t border-gold/15 pt-6 text-center sm:grid-cols-3">
           <div>
             <p className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-gold/80">
               Find us
             </p>
             <p className="mt-2 font-sans text-xs leading-relaxed text-cream/75">
-              Sukhumvit Soi 23, Bangkok
+              <a
+                href="https://www.google.com/maps/search/?api=1&query=Le+Dalat+57+Soi+Sukhumvit+23+Bangkok"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="transition-colors hover:text-cream"
+              >
+                57 Soi Sukhumvit 23
+              </a>
               <span className="block text-cream/35">
-                [exact address pending]
+                Khlong Toei Nuea, Watthana, Bangkok 10110
               </span>
             </p>
           </div>
@@ -204,8 +211,11 @@ export default function SceneNightGarden() {
               Hours
             </p>
             <p className="mt-2 font-sans text-xs leading-relaxed text-cream/75">
-              Lunch &amp; dinner
-              <span className="block text-cream/35">[hours pending]</span>
+              Lunch 11:30 am &ndash; 2:30 pm
+              <span className="block">Dinner 5:30 &ndash; 10:00 pm</span>
+              <span className="block text-cream/35">
+                Last booking 1:30 pm &middot; 9:30 pm
+              </span>
             </p>
           </div>
         </div>

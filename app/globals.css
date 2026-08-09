@@ -163,7 +163,8 @@ body {
       0 0 22px color-mix(in srgb, var(--color-cream) 32%, transparent);
   }
 
-  /* Finale reservation — serif values, gold rules, custom chevrons */
+  /* Finale reservation — boxed fields on the glass card: gold hairline,
+     candlelit fill, serif values, one shared chevron language */
   .reserve-field-wrap {
     position: relative;
   }
@@ -171,45 +172,43 @@ body {
     content: "";
     pointer-events: none;
     position: absolute;
-    right: 0.35rem;
-    bottom: 1rem;
+    right: 1rem;
+    top: 50%;
     width: 0.45rem;
     height: 0.45rem;
     border-right: 1px solid color-mix(in srgb, var(--color-gold) 75%, transparent);
     border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 75%, transparent);
-    transform: rotate(45deg);
+    transform: translateY(-70%) rotate(45deg);
     opacity: 0.85;
   }
   .reserve-field {
     width: 100%;
+    min-height: 3rem;
     appearance: none;
     cursor: pointer;
-    border: none;
-    border-bottom: 1px solid color-mix(in srgb, var(--color-gold) 38%, transparent);
-    background: linear-gradient(
-      180deg,
-      transparent 0%,
-      color-mix(in srgb, var(--color-umber-deep) 35%, transparent) 100%
-    );
-    padding: 0.5rem 1.35rem 0.75rem 0.15rem;
+    border: 1px solid color-mix(in srgb, var(--color-gold) 32%, transparent);
+    background-color: color-mix(in srgb, var(--color-umber-deep) 52%, transparent);
+    padding: 0.65rem 2.5rem 0.65rem 1rem;
     font-family: var(--font-serif);
-    font-size: 0.9375rem;
+    font-size: 1rem;
     font-style: italic;
     line-height: 1.35;
     color: var(--color-cream);
     transition:
       border-color 0.45s ease,
       color 0.45s ease,
+      background-color 0.45s ease,
       box-shadow 0.45s ease;
   }
   .reserve-field:hover {
-    border-bottom-color: color-mix(in srgb, var(--color-gold) 58%, transparent);
+    border-color: color-mix(in srgb, var(--color-gold) 55%, transparent);
     color: var(--color-parchment);
   }
   .reserve-field:focus {
     outline: none;
-    border-bottom-color: color-mix(in srgb, var(--color-gold) 85%, transparent);
-    box-shadow: 0 6px 22px -12px color-mix(in srgb, var(--color-gold) 45%, transparent);
+    border-color: color-mix(in srgb, var(--color-gold) 85%, transparent);
+    background-color: color-mix(in srgb, var(--color-umber-deep) 68%, transparent);
+    box-shadow: 0 10px 30px -14px color-mix(in srgb, var(--color-gold) 50%, transparent);
   }
   .reserve-field:invalid,
   .reserve-field option[value=""] {
@@ -222,24 +221,20 @@ body {
     background-color: var(--color-umber-deep);
     color: var(--color-cream);
   }
-  .reserve-field-wrap--date::after {
-    display: none;
-  }
   .reserve-field--date {
-    padding-right: 2rem;
-    font-size: 1rem;
+    position: relative;
   }
+  /* The native indicator becomes an invisible click-anywhere target;
+     the shared gold chevron is the visible affordance */
   .reserve-field--date::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: auto;
+    height: auto;
+    margin: 0;
+    padding: 0;
     cursor: pointer;
-    opacity: 0.9;
-    filter: invert(72%) sepia(35%) saturate(520%) hue-rotate(358deg)
-      brightness(95%) contrast(88%);
-    transition: opacity 0.45s ease, transform 0.45s ease;
-  }
-  .reserve-field--date:hover::-webkit-calendar-picker-indicator,
-  .reserve-field--date:focus::-webkit-calendar-picker-indicator {
-    opacity: 1;
-    transform: scale(1.06);
+    opacity: 0;
   }
   .reserve-field--date-empty::-webkit-datetime-edit,
   .reserve-field--date-empty::-webkit-datetime-edit-fields-wrapper,
@@ -477,10 +472,13 @@ body {
   }
 
   .dish-media-frame video {
-    /* Placeholder cuts include baked-in subtitles — crop the lower band */
+    /* Placeholder cuts include baked-in subtitles — crop the lower band.
+       The translate keeps the clipped edge below the frame (clip removes
+       11.2% of frame height; scale only overflows 6%) so no bare ground
+       ever shows under the video. */
     object-fit: cover;
     object-position: center 38%;
-    transform: scale(1.12);
+    transform: translateY(5.5%) scale(1.12);
     transform-origin: center center;
     clip-path: inset(0 0 10% 0);
   }

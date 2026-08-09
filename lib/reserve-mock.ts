@@ -4,6 +4,9 @@
  * the real engine contract so the eventual wiring is a data swap.
  */
 
+/* Confirmed hours (Aug 2026): lunch 11:30–14:30, dinner 17:30–22:00.
+   Bookable windows end at 13:30 and 21:30 — these slot lists ARE those
+   windows; change them only if the house changes its hours. */
 export const LUNCH_SLOTS = ["11:30", "12:00", "12:30", "13:00", "13:30"];
 export const DINNER_SLOTS = ["17:30", "18:00", "18:30", "19:00", "19:30", "20:00", "20:30", "21:00", "21:30"];
 export const ONLINE_PARTY_MAX = 10;
