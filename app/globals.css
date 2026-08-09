@@ -405,6 +405,15 @@ input[type="date"] {
    * Scene 5 → 6: solid umber then a long alpha dissolve (opaque-only stops
    * were leaving a ~2rem hard line before the photo).
    */
+  /* Own ground under the photo: subpixel edges of the photo and handoff
+     antialias against this same brown, so no hairline seam shows against
+     the brighter People ground above. Doubled class outranks the
+     bg-transparent utility. */
+  .night-garden-scene.night-garden-scene {
+    background-color: var(--color-people-ground);
+  }
+
+
   .night-garden-scene__handoff {
     position: absolute;
     /* 2px above the section: the handoff's own antialiased top edge hides
@@ -440,15 +449,18 @@ input[type="date"] {
     inset: 0;
     z-index: 2;
     pointer-events: none;
+    /* Gentle, warm descent — the old ramp peaked at 0.52 black right
+       under the handoff, which read as a dark strip against the
+       brighter People brown above (it hid when everything was umber) */
     background: linear-gradient(
       to bottom,
       transparent 0,
       transparent var(--night-handoff-height),
-      rgba(18, 11, 5, 0.08) calc(var(--night-handoff-height) + 2.5rem),
-      rgba(18, 11, 5, 0.22) calc(var(--night-handoff-height) + 6rem),
-      rgba(18, 11, 5, 0.38) calc(var(--night-handoff-height) + 10rem),
-      rgba(18, 11, 5, 0.52) calc(var(--night-handoff-height) + 14rem),
-      rgba(18, 11, 5, 0.32) calc(100% - 8rem),
+      rgba(85, 56, 31, 0.08) calc(var(--night-handoff-height) + 4rem),
+      rgba(52, 33, 18, 0.16) calc(var(--night-handoff-height) + 10rem),
+      rgba(18, 11, 5, 0.26) calc(var(--night-handoff-height) + 17rem),
+      rgba(18, 11, 5, 0.34) calc(var(--night-handoff-height) + 24rem),
+      rgba(18, 11, 5, 0.30) calc(100% - 8rem),
       rgba(18, 11, 5, 0.18) 100%
     );
   }

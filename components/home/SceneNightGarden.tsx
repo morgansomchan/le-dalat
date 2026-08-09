@@ -72,9 +72,12 @@ export default function SceneNightGarden() {
       ref={scope}
       id="night-garden"
       aria-label="Night, in the garden"
-      className="night-garden-scene relative overflow-hidden bg-transparent"
+      className="night-garden-scene relative bg-transparent"
     >
-      {/* The set table glows through a heavy candlelit scrim */}
+      {/* The set table glows through a heavy candlelit scrim. The photo is
+          clipped by its own wrapper; the handoff and scrim live OUTSIDE it
+          so their unclipped edges can cover the photo's antialiased clip
+          edge (a hairline seam against the brighter People ground). */}
       <div aria-hidden className="absolute inset-0 overflow-hidden">
         <div
           data-night-kb
@@ -88,12 +91,12 @@ export default function SceneNightGarden() {
             className="object-cover"
           />
         </div>
-        {/* The hope curve: teak haze clears slowly at the top (no hard photo
-            edge against scene 5), then the scrim thins toward the bottom —
-            the page ends on the table at its brightest (user direction) */}
-        <div className="night-garden-scene__handoff" aria-hidden />
-        <div className="night-garden-scene__scrim" aria-hidden />
       </div>
+      {/* The hope curve: teak haze clears slowly at the top (no hard photo
+          edge against scene 5), then the scrim thins toward the bottom —
+          the page ends on the table at its brightest (user direction) */}
+      <div className="night-garden-scene__handoff" aria-hidden />
+      <div className="night-garden-scene__scrim" aria-hidden />
 
       <div className="night-garden-scene__content relative z-10 mx-auto flex min-h-svh max-w-2xl flex-col items-center justify-start px-6 pb-28 text-center sm:pb-36">
         <p data-night-reveal className="eyebrow">
