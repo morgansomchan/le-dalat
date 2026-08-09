@@ -143,28 +143,27 @@ export default function SceneSignatureDishes() {
       const deck = scope.current?.querySelector<HTMLElement>("[data-dish-deck]");
       if (!ground || !deck) return;
 
-      // Discrete ground: the color belongs to the active dish and steps
-      // with it at the crossfade midpoint (a short CSS transition on the
-      // ground element carries the step; no scroll-linked lerp).
-      const scrubDishGround = (progress: number) => {
-        const colors = readDishGroundColors();
-        const idx = Math.min(
-          slides.length - 1,
-          Math.round(progress * (slides.length - 1)),
-        );
-        const onCrepes = idx === slides.length - 1;
-        deck.toggleAttribute("data-last-dish", onCrepes);
-        deck.toggleAttribute("data-crepe-melt", onCrepes);
-        const key = slides[idx].dataset.dishAtmosphere as DishAtmosphere;
-        ground.style.setProperty("--dish-ground", colors[key]);
-      };
-
       gsap.set("[data-dish-dashes]", { display: "flex" });
       gsap.set("[data-dish-slide]", { backgroundColor: "transparent" });
-      scrubDishGround(0);
       slides.forEach((slide, i) => {
         gsap.set(slide, { zIndex: i === 0 ? 2 : 1, autoAlpha: i === 0 ? 1 : 0 });
       });
+
+      // Ground colors are read once (and again on refresh), never per
+      // scroll frame — getComputedStyle in onUpdate forces a style recalc
+      // on every scrolled frame.
+      let groundColors = readDishGroundColors();
+
+      // Only the active dish's video decodes; the two hidden loops
+      // otherwise burn decode bandwidth for the whole page session.
+      const setVideoPlayback = (idx: number) => {
+        slides.forEach((slide, i) => {
+          const video = slide.querySelector("video");
+          if (!video) return;
+          if (i === idx) video.play().catch(() => {});
+          else video.pause();
+        });
+      };
 
       // Discrete deck: scroll position only SELECTS a dish — each dish
       // owns an equal share of the pinned distance, and crossing a
@@ -177,6 +176,13 @@ export default function SceneSignatureDishes() {
         const from = slides[activeIdx];
         const to = slides[idx];
         activeIdx = idx;
+        const onCrepes = idx === slides.length - 1;
+        deck.toggleAttribute("data-last-dish", onCrepes);
+        deck.toggleAttribute("data-crepe-melt", onCrepes);
+        const key = to.dataset.dishAtmosphere as DishAtmosphere;
+        ground.style.setProperty("--dish-ground", groundColors[key]);
+        dashes.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+        setVideoPlayback(idx);
         gsap.set(to, { zIndex: 2 });
         gsap.set(from, { zIndex: 1 });
         gsap.to(from, {
@@ -193,6 +199,10 @@ export default function SceneSignatureDishes() {
         });
       };
 
+      ground.style.setProperty("--dish-ground", groundColors.fish);
+      dashes.forEach((d, i) => d.classList.toggle("is-active", i === 0));
+      setVideoPlayback(0);
+
       ScrollTrigger.create({
         trigger: "[data-dish-deck]",
         start: "top top",
@@ -200,14 +210,18 @@ export default function SceneSignatureDishes() {
         pin: true,
         anticipatePin: 1,
         invalidateOnRefresh: true,
+        onRefresh: () => {
+          groundColors = readDishGroundColors();
+        },
+        // Per-frame work is a single arithmetic compare; all DOM writes
+        // happen only when the active dish actually changes.
         onUpdate(self) {
-          scrubDishGround(self.progress);
-          const idx = Math.min(
-            slides.length - 1,
-            Math.round(self.progress * (slides.length - 1)),
+          showDish(
+            Math.min(
+              slides.length - 1,
+              Math.round(self.progress * (slides.length - 1)),
+            ),
           );
-          dashes.forEach((d, i) => d.classList.toggle("is-active", i === idx));
-          showDish(idx);
         },
       });
     }, scope);
