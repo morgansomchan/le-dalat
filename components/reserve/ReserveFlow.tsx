@@ -16,6 +16,7 @@ import {
 import {
   checkAvailability,
   createReservation,
+  listServiceSlots,
   normalizePhone,
 } from "@/lib/reserve-engine";
 
@@ -125,7 +126,30 @@ export default function ReserveFlow({
 
   /* ── the real offers: probe each hour of the active service ──────── */
 
-  const offersKey = `${date}|${party}|${service}`;
+  /* Amendment 5: the slot lists derive from service_windows in the
+     database — the same source as the staff dashboard. The hardcoded
+     constants remain only as an offline fallback. */
+  const [slotLists, setSlotLists] = useState<{ lunch: string[]; dinner: string[] }>({
+    lunch: LUNCH_SLOTS,
+    dinner: DINNER_SLOTS,
+  });
+  useEffect(() => {
+    let cancelled = false;
+    void listServiceSlots()
+      .then((lists) => {
+        if (!cancelled && lists?.lunch?.length && lists?.dinner?.length) {
+          setSlotLists(lists);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // The list is part of the key: when the engine's slot lists arrive
+  // (or change), the open-hours probe reruns against them.
+  const offersKey = `${date}|${party}|${service}|${slotLists[service].join(",")}`;
   const [offers, setOffers] = useState<{ key: string; state: Offers } | null>(null);
   const offersState: Offers =
     offers?.key === offersKey ? offers.state : { status: "loading" };
@@ -137,7 +161,7 @@ export default function ReserveFlow({
     let cancelled = false;
     (async () => {
       try {
-        const slots = service === "lunch" ? LUNCH_SLOTS : DINNER_SLOTS;
+        const slots = service === "lunch" ? slotLists.lunch : slotLists.dinner;
         const results = await Promise.all(
           slots.map((s) => checkAvailability(date, s, party)),
         );

@@ -4,9 +4,9 @@ import { createClient } from "@supabase/supabase-js";
 
 /**
  * GATE 5B — the flow's only data access. The reservation engine lives in
- * the shared Supabase backend; this page may touch it through exactly two
- * anon-callable functions and nothing else. The anon (publishable) key
- * holds no table permissions.
+ * the shared Supabase backend; this page may touch it through a handful
+ * of anon-callable functions and nothing else. The anon (publishable)
+ * key holds no table permissions.
  */
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,6 +33,17 @@ export interface Availability {
   /** True on no_fit when only R or an arranged run could seat this size —
       the refusal must invite a call, never read "fully seated". */
   arrange?: boolean;
+}
+
+/**
+ * GATE 9 (Amendment 5): THE slot lists, derived in the database from the
+ * service_windows setting — the same source the staff dashboard uses, so
+ * an owner's settings edit moves both flows with no code change.
+ */
+export async function listServiceSlots(): Promise<{ lunch: string[]; dinner: string[] }> {
+  const { data, error } = await supabase.rpc("list_service_slots");
+  if (error) throw new Error(error.message);
+  return data as { lunch: string[]; dinner: string[] };
 }
 
 export async function checkAvailability(
