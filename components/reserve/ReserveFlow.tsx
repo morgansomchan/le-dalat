@@ -86,7 +86,6 @@ export default function ReserveFlow({
   });
   const [party, setParty] = useState(initialParty && initialParty >= 1 ? initialParty : 2);
   const [service, setService] = useState<"lunch" | "dinner">("dinner");
-  const [slotPage, setSlotPage] = useState(0);
   const [hour, setHour] = useState<string | null>(null);
   const [consult, setConsult] = useState<Consult>("idle");
   const [alternatives, setAlternatives] = useState<string[]>([]);
@@ -235,7 +234,6 @@ export default function ReserveFlow({
     // if this service is spoken for, open the other one
     if (offersState.status === "ready" && offersState.open.length === 0) {
       setService((s) => (s === "lunch" ? "dinner" : "lunch"));
-      setSlotPage(0);
     }
   };
 
@@ -596,7 +594,6 @@ export default function ReserveFlow({
                       type="button"
                       onClick={() => {
                         setService(svc);
-                        setSlotPage(0);
                         setHour(null);
                       }}
                       className={`border-b pb-1 font-sans text-[0.6875rem] tracking-[0.25em] uppercase transition-colors duration-300 ${
@@ -610,44 +607,12 @@ export default function ReserveFlow({
                   ))}
                 </div>
 
-                {/* the open hours as offerings — a handful at a time */}
+                {/* every open hour at once — a guest must never have to
+                    discover a page arrow to learn the evening's last seating */}
                 {offersState.status === "ready" && offersState.open.length > 0 && (
-                  (() => {
-                    const pages: string[][] = [];
-                    for (let i = 0; i < offersState.open.length; i += 5) {
-                      pages.push(offersState.open.slice(i, i + 5));
-                    }
-                    const page = pages[Math.min(slotPage, pages.length - 1)];
-                    return (
-                      <div className="mt-8 flex items-center gap-3">
-                        <button
-                          type="button"
-                          aria-label="Earlier hours"
-                          disabled={slotPage === 0}
-                          onClick={() => setSlotPage((p) => Math.max(0, p - 1))}
-                          className={`text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25 ${
-                            pages.length > 1 ? "" : "invisible"
-                          }`}
-                        >
-                          ‹
-                        </button>
-                        <div className="flex max-w-[18rem] flex-wrap items-center justify-center gap-2.5">
-                          {page.map((s) => medallion(s, "offer"))}
-                        </div>
-                        <button
-                          type="button"
-                          aria-label="Later hours"
-                          disabled={slotPage >= pages.length - 1}
-                          onClick={() => setSlotPage((p) => p + 1)}
-                          className={`text-lg text-navy/60 transition-colors hover:text-navy disabled:opacity-25 ${
-                            pages.length > 1 ? "" : "invisible"
-                          }`}
-                        >
-                          ›
-                        </button>
-                      </div>
-                    );
-                  })()
+                  <div className="mt-8 flex max-w-md flex-wrap items-center justify-center gap-2.5">
+                    {offersState.open.map((s) => medallion(s, "offer"))}
+                  </div>
                 )}
 
                 {/* the book cannot be reached — quiet, with a way back in */}
