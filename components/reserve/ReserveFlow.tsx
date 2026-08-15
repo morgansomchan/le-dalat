@@ -91,6 +91,8 @@ export default function ReserveFlow({
   const [alternatives, setAlternatives] = useState<string[]>([]);
   /** The hour whose tap was refused — null when a whole service opened empty. */
   const [soldHour, setSoldHour] = useState<string | null>(null);
+  /** The engine's refusal reason — 'past' earns honest, gentler copy. */
+  const [soldReason, setSoldReason] = useState<string | null>(null);
   /** Engine's arrange hint: this size lives on R / arranged runs only. */
   const [soldArrange, setSoldArrange] = useState(false);
   const [seating, setSeating] = useState<"house" | "madams">("house");
@@ -173,6 +175,7 @@ export default function ReserveFlow({
         if (open.length === 0 && !arrange) {
           setAlternatives(alts);
           setSoldHour(null);
+          setSoldReason(null);
           setSoldArrange(results.some((r) => r.arrange === true));
           setConsult("soldout");
         }
@@ -212,9 +215,11 @@ export default function ReserveFlow({
           setConsult("idle");
           go("seating");
         } else {
-          // taken between the probe and the tap — offer what remains
+          // taken between the probe and the tap — or the clock walked
+          // past the slot while the guest was choosing
           setAlternatives(verdict.alternatives ?? []);
           setSoldHour(slot);
+          setSoldReason(verdict.reason ?? null);
           setSoldArrange(verdict.arrange === true);
           setHour(null);
           setConsult("soldout");
@@ -663,12 +668,16 @@ export default function ReserveFlow({
                 >
                   {soldArrange
                     ? `${soldHour ? "That hour" : "That evening"} cannot seat a party of ${speakParty(party).split(" ")[0]}.`
-                    : soldHour
-                      ? "That hour is fully seated."
-                      : "That evening is nearly full."}
+                    : soldReason === "past"
+                      ? "That hour has just slipped past."
+                      : soldHour
+                        ? "That hour is fully seated."
+                        : "That evening is nearly full."}
                 </p>
                 <p className={`mx-auto mt-2 max-w-xs ${hint}`}>
-                  The book fills quickly some evenings.
+                  {soldReason === "past"
+                    ? "The clock moved on while you were choosing — the later hours still stand."
+                    : "The book fills quickly some evenings."}
                   {alternatives.length > 0 && " Close by, the house can still offer:"}
                 </p>
                 {alternatives.length > 0 && (
