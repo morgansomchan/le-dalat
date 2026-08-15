@@ -791,12 +791,14 @@ export default function ReserveFlow({
                 <span className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-navy/60">
                   Telephone
                 </span>
-                <div className="mt-1.5 flex items-baseline gap-2">
+                {/* items-end + matched heights: a select's baseline never
+                    agrees with an input's, so the underlines drifted */}
+                <div className="mt-1.5 flex items-end gap-2">
                   <select
                     value={phoneCode}
                     onChange={(e) => setPhoneCode(e.target.value)}
                     aria-label="Country code"
-                    className="border-b border-navy/25 bg-transparent pb-2 font-serif text-lg text-navy focus:border-navy/70 focus:outline-none"
+                    className="h-10 border-b border-navy/25 bg-transparent pb-2 font-serif text-lg text-navy focus:border-navy/70 focus:outline-none"
                   >
                     {PHONE_CODES.map((c) => (
                       <option key={c} value={c}>
@@ -811,7 +813,7 @@ export default function ReserveFlow({
                     onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
                     autoComplete="tel-national"
                     placeholder="81 234 5678"
-                    className={`w-full border-b bg-transparent pb-2 font-serif text-lg text-navy placeholder:font-sans placeholder:text-[0.8125rem] placeholder:text-navy/35 focus:outline-none ${
+                    className={`h-10 w-full border-b bg-transparent pb-2 font-serif text-lg text-navy placeholder:font-sans placeholder:text-[0.8125rem] placeholder:text-navy/35 focus:outline-none ${
                       touched.phone && !phoneOk
                         ? "border-clay/70"
                         : "border-navy/25 focus:border-navy/70"
