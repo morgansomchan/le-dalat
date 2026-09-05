@@ -1,6 +1,6 @@
 "use client";
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * GATE 5B — the flow's only data access. The reservation engine lives in
@@ -8,10 +8,46 @@ import { createClient } from "@supabase/supabase-js";
  * of anon-callable functions and nothing else. The anon (publishable)
  * key holds no table permissions.
  */
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-);
+/**
+ * The client is built on first use, never at import. Constructing it at module
+ * scope meant a missing key threw during module evaluation, and that took the
+ * whole /reservation route down with a 500 before a single pixel rendered —
+ * the guest saw a blank error instead of the house line. Now the page paints
+ * and only the calls fail.
+ *
+ * Both key names are read because Supabase renamed the anon key to the
+ * publishable key; a project issued either one is wired correctly. They must
+ * stay written out in full — Next.js inlines NEXT_PUBLIC_* by textual
+ * substitution at build time, so a computed lookup would never be replaced.
+ */
+export class ReserveUnavailableError extends Error {
+  constructor() {
+    super("The reservation engine is not configured.");
+    this.name = "ReserveUnavailableError";
+  }
+}
+
+let client: SupabaseClient | null = null;
+
+function db(): SupabaseClient {
+  if (client) return client;
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key =
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!url || !key) throw new ReserveUnavailableError();
+  client = createClient(url, key);
+  return client;
+}
+
+/** Whether the engine is reachable at all — lets a caller offer the phone instead. */
+export function reserveConfigured(): boolean {
+  return Boolean(
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+      (process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+  );
+}
 
 export interface Availability {
   available: boolean;
@@ -41,7 +77,7 @@ export interface Availability {
  * an owner's settings edit moves both flows with no code change.
  */
 export async function listServiceSlots(): Promise<{ lunch: string[]; dinner: string[] }> {
-  const { data, error } = await supabase.rpc("list_service_slots");
+  const { data, error } = await db().rpc("list_service_slots");
   if (error) throw new Error(error.message);
   return data as { lunch: string[]; dinner: string[] };
 }
@@ -52,7 +88,7 @@ export async function checkAvailability(
   party: number,
   seatingPref: string | null = null,
 ): Promise<Availability> {
-  const { data, error } = await supabase.rpc("check_availability", {
+  const { data, error } = await db().rpc("check_availability", {
     p_date: date,
     p_time: time,
     p_party: party,
@@ -83,7 +119,7 @@ export async function createReservation(args: {
   note: string | null;
   seatingPref: string | null;
 }): Promise<CreateResult> {
-  const { data, error } = await supabase.rpc("create_reservation", {
+  const { data, error } = await db().rpc("create_reservation", {
     p_date: args.date,
     p_time: args.time,
     p_party: args.party,
@@ -128,7 +164,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export async function getReservationByToken(token: string): Promise<ManagedReservation> {
   // A malformed token is simply an unknown one — never a different answer.
   if (!UUID_RE.test(token)) return { found: false };
-  const { data, error } = await supabase.rpc("get_reservation_by_token", {
+  const { data, error } = await db().rpc("get_reservation_by_token", {
     p_token: token,
   });
   if (error) throw new Error(error.message);
@@ -139,7 +175,7 @@ export async function cancelReservationByToken(
   token: string,
 ): Promise<{ success: boolean; reason?: string }> {
   if (!UUID_RE.test(token)) return { success: false, reason: "unknown" };
-  const { data, error } = await supabase.rpc("cancel_reservation_by_token", {
+  const { data, error } = await db().rpc("cancel_reservation_by_token", {
     p_token: token,
   });
   if (error) throw new Error(error.message);
