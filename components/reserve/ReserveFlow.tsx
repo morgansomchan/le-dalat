@@ -268,6 +268,17 @@ export default function ReserveFlow({
         if (result.success) {
           setReference(`LD-${result.reservation_id.slice(-4).toUpperCase()}`);
           setManageToken(result.manage_token);
+          // The letter carries the only durable copy of the manage link — but
+          // it is a courtesy, never a gate. A refused send must not disturb a
+          // table that is already held, so this is fired and forgotten.
+          const guestEmail = email.trim();
+          if (guestEmail) {
+            void fetch("/api/reservation/confirm", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ token: result.manage_token, email: guestEmail }),
+            }).catch(() => {});
+          }
           go("done");
           return;
         }
@@ -937,6 +948,21 @@ export default function ReserveFlow({
               this table for two hours from your chosen hour. If your evening
               changes, the link below lets you release it — or telephone the
               house: {PHONE_DISPLAY}.
+            </p>
+
+            {/* The link is the guest's only way back. Say plainly whether a
+                copy is following them out the door, or whether this screen
+                is the last they will see of it. */}
+            <p className={`mt-4 max-w-sm ${hint}`}>
+              {email.trim() ? (
+                <>A copy is on its way to <span className="text-navy/70">{email.trim()}</span>.</>
+              ) : (
+                <em className="text-clay">
+                  No address was given, so this screen is the only place this
+                  link appears — keep it, or telephone the house to change
+                  anything.
+                </em>
+              )}
             </p>
 
             <div className="mt-10 flex flex-col items-center gap-5">
