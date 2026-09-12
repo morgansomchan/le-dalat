@@ -11,12 +11,14 @@ import {
   toDateKey,
   upcomingDays,
   speakDate,
+  speakNumber,
   speakParty,
 } from "@/lib/reserve-mock";
 import {
   checkAvailability,
   createReservation,
   listServiceSlots,
+  onlineRules,
   normalizePhone,
 } from "@/lib/reserve-engine";
 
@@ -96,6 +98,12 @@ export default function ReserveFlow({
   /** Engine's arrange hint: this size lives on R / arranged runs only. */
   const [soldArrange, setSoldArrange] = useState(false);
   const [seating, setSeating] = useState<"house" | "madams">("house");
+  /** Madam's Room is for parties of this size or more — an owner setting,
+      read from the house; six is the offline fallback. */
+  const [madamsMinParty, setMadamsMinParty] = useState(6);
+  const madamsOpen = party >= madamsMinParty;
+  /** What the house is actually asked for: a small party never asks for the room. */
+  const seatingPref = seating === "madams" && madamsOpen ? "madams_room" : null;
 
   const [name, setName] = useState("");
   const [phoneCode, setPhoneCode] = useState("+66");
@@ -140,6 +148,13 @@ export default function ReserveFlow({
       .then((lists) => {
         if (!cancelled && lists?.lunch?.length && lists?.dinner?.length) {
           setSlotLists(lists);
+        }
+      })
+      .catch(() => {});
+    void onlineRules()
+      .then((rules) => {
+        if (!cancelled && Number.isInteger(rules?.madams_min_party) && rules.madams_min_party >= 1) {
+          setMadamsMinParty(rules.madams_min_party);
         }
       })
       .catch(() => {});
@@ -263,7 +278,7 @@ export default function ReserveFlow({
           phone: normalizePhone(phoneCode, phone),
           email: email.trim() || null,
           note: note.trim() || null,
-          seatingPref: seating === "madams" ? "madams_room" : null,
+          seatingPref,
         });
         if (result.success) {
           setReference(`LD-${result.reservation_id.slice(-4).toUpperCase()}`);
@@ -732,16 +747,20 @@ export default function ReserveFlow({
                 {
                   value: "madams" as const,
                   title: "Madam's Room",
-                  line: "The private room, for quieter occasions.",
+                  line: madamsOpen
+                    ? "The private room, for quieter occasions."
+                    : `The private room, for parties of ${speakNumber(madamsMinParty)} or more.`,
+                  closed: !madamsOpen,
                 },
               ].map((opt) => {
-                const active = seating === opt.value;
+                const active = seating === opt.value && !opt.closed;
                 return (
                   <button
                     key={opt.value}
                     type="button"
+                    disabled={opt.closed}
                     onClick={() => chooseSeating(opt.value)}
-                    className="group flex max-w-sm flex-col items-center"
+                    className="group flex max-w-sm flex-col items-center disabled:opacity-40"
                   >
                     <span
                       aria-hidden
@@ -932,7 +951,7 @@ export default function ReserveFlow({
                 ["Evening", chosen ?? "—"],
                 ["Hour", hour ? `${slotParts(hour).face} ${slotParts(hour).meridiem}` : "—"],
                 ["Party", speakParty(party)],
-                ["Seating", seating === "madams" ? "Madam's Room" : "Chosen by the house"],
+                ["Seating", seatingPref ? "Madam's Room" : "Chosen by the house"],
               ].map(([k, v]) => (
                 <div key={k} className="flex flex-col items-center">
                   <dt className="font-sans text-[0.5625rem] tracking-[0.25em] uppercase text-navy/45">

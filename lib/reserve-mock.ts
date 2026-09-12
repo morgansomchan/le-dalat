@@ -66,8 +66,12 @@ export function speakDateShort(key: string): string {
   return `${WEEKDAYS[d.getDay()]} ${d.getDate()} ${MONTHS[d.getMonth()]}`;
 }
 
-export function speakParty(n: number): string {
+export function speakNumber(n: number): string {
   const words = ["", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
-  return `${words[n] ?? n} ${n === 1 ? "guest" : "guests"}`;
+  return words[n] ?? String(n);
+}
+
+export function speakParty(n: number): string {
+  return `${speakNumber(n)} ${n === 1 ? "guest" : "guests"}`;
 }
 

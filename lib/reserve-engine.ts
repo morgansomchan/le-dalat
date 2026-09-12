@@ -82,6 +82,17 @@ export async function listServiceSlots(): Promise<{ lunch: string[]; dinner: str
   return data as { lunch: string[]; dinner: string[] };
 }
 
+/**
+ * The house's online rules — Madam's Room opens to the web only from
+ * madams_min_party guests (an owner setting). Read so the page can hide
+ * the choice for smaller parties; the engine enforces it regardless.
+ */
+export async function onlineRules(): Promise<{ madams_min_party: number; online_party_max: number }> {
+  const { data, error } = await db().rpc("online_rules");
+  if (error) throw new Error(error.message);
+  return data as { madams_min_party: number; online_party_max: number };
+}
+
 export async function checkAvailability(
   date: string,
   time: string,
