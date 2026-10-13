@@ -88,10 +88,7 @@ const DISHES: Dish[] = [
     name: "Vietnamese Crêpes (Bánh Xèo)",
     story:
       "A crispy turmeric-infused rice crêpe filled with shrimp, pork, and bean sprouts, wrapped in fresh herbs and dipped in fish sauce.",
-    photos: [
-      "/web_assets/Food/Copy of LeDalat_Jan91028 3.jpg",
-      "/web_assets/Food/Copy of LeDalat_Jan91033 3.JPG",
-    ],
+    photos: ["/web_assets/Food/banh-xeo.jpg"],
     atmosphere: "crepes",
   },
 ];
@@ -294,7 +291,12 @@ export default function SceneSignatureDishes() {
                     className={`dish-media-frame relative overflow-hidden rounded-2xl sm:rounded-3xl ${
                       dish.video
                         ? "h-[min(34svh,17.5rem)] min-w-0 flex-1 sm:h-[min(64svh,40rem)]"
-                        : "aspect-[4/5] h-[min(25svh,13rem)] shrink-0 sm:h-[min(54svh,33rem)]"
+                        : dish.photos.length === 1
+                          // A dish carried by a single plate photograph gets a
+                          // landscape frame: the crêpe lies down, and the
+                          // dipping sauce beside it is part of the dish.
+                          ? "aspect-[3/2] w-[min(80vw,26rem)] shrink-0 sm:w-[min(46vw,34rem)]"
+                          : "aspect-[4/5] h-[min(25svh,13rem)] shrink-0 sm:h-[min(54svh,33rem)]"
                     }`}
                   >
                     <Image

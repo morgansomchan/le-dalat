@@ -56,6 +56,17 @@ const TIMELINE = [
   {
     date: "2009",
     copy: "The restaurant relocated within the same street into a reconstructed, authentic 1896 wooden farmhouse imported from Vietnam.",
+    photo: {
+      // Copied into heritage/ rather than referenced in place: the
+      // "Interor+exterior" folder's "+" is decoded as a space by the local
+      // image optimizer, so those paths 400 under `next start` even though
+      // Vercel serves them. A clean name keeps this verifiable offline.
+      src: "/web_assets/heritage/villa-photograph-wall.jpg",
+      width: 1280,
+      height: 1600,
+      alt: "A brick wall inside the villa hung densely with framed family photographs, above a carved settee and blue-and-white porcelain",
+      caption: "The farmhouse walls, where the family hung its photographs",
+    },
   },
   {
     date: "Today",
