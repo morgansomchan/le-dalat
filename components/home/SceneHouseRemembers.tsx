@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -22,15 +23,35 @@ gsap.registerPlugin(ScrollTrigger);
 /*
  * Heritage timeline — editorial copy; dates reflect the family narrative
  * as provided for the public site.
+ *
+ * The photographs are the family's own archive. Their captions are the
+ * family's wording, carried over from the framing list rather than written
+ * here — PLACEHOLDER until the family approves them for the public site,
+ * like all story content. The prints are not cropped: each keeps the shape
+ * it was scanned at, because an archive is not a grid.
  */
 const TIMELINE = [
   {
     date: "1926",
     copy: "The family matriarch established the wealthy Mekong Delta culinary traditions and helped found the Cao Dai religion in French colonial Vietnam.",
+    photo: {
+      src: "/web_assets/heritage/hoa-ly-with-her-mother.jpg",
+      width: 990,
+      height: 1400,
+      alt: "Madame Hoa Ly as a young woman, standing beside her seated mother, both in embroidered ao dai",
+      caption: "Madame Hoa Ly at sixteen with her mother, Madame Huynh Ngoc Ho",
+    },
   },
   {
     date: "1983",
     copy: "Madame Hoa Ly opened Le Dalat on Sukhumvit Soi 23 as Bangkok’s pioneer upscale Vietnamese restaurant.",
+    photo: {
+      src: "/web_assets/heritage/hoa-ly-da-lat-1938.jpg",
+      width: 1400,
+      height: 1078,
+      alt: "Madame Hoa Ly in ao dai holding an armful of blossom beside a 1938 Buick Century, in Da Lat",
+      caption: "Da Lat, 1938 — the resort that would give the restaurant its name",
+    },
   },
   {
     date: "2009",
@@ -105,6 +126,23 @@ export default function SceneHouseRemembers() {
               { autoAlpha: 0, y: 24, duration: 1.2 },
               "-=0.8",
             );
+
+          // The photograph surfaces last and slowest — a print set down,
+          // not a card dealt. Entries without one simply skip this.
+          const print = entry.querySelector("[data-entry-photo]");
+          if (print) {
+            gsap.from(print, {
+              autoAlpha: 0,
+              y: 20,
+              duration: 1.6,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: print,
+                start: "top 85%",
+                toggleActions: "play none none reverse",
+              },
+            });
+          }
         });
     }, scope);
 
@@ -156,6 +194,22 @@ export default function SceneHouseRemembers() {
                   <p className="mt-4 max-w-prose text-base leading-relaxed text-cream/85 sm:text-lg">
                     {entry.copy}
                   </p>
+                  {entry.photo && (
+                    <figure data-entry-photo className="mt-8">
+                      {/* A hung print: gold hairline, its own shape kept */}
+                      <Image
+                        src={entry.photo.src}
+                        alt={entry.photo.alt}
+                        width={entry.photo.width}
+                        height={entry.photo.height}
+                        sizes="(min-width: 640px) 20rem, 70vw"
+                        className="h-auto w-full max-w-[14rem] rounded-sm ring-1 ring-gold/30 sm:max-w-[18rem]"
+                      />
+                      <figcaption className="mt-3 max-w-[14rem] font-sans text-[0.625rem] leading-relaxed tracking-[0.2em] uppercase text-cream/60 sm:max-w-[18rem]">
+                        {entry.photo.caption}
+                      </figcaption>
+                    </figure>
+                  )}
                   {entry.invitation && (
                     <p className="mt-6 font-serif text-lg italic text-cream">
                       The evening is waiting.{" "}
