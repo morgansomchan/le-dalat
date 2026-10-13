@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import Image from "next/image";
+import HouseArchive from "@/components/home/HouseArchive";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -57,10 +58,8 @@ const TIMELINE = [
     date: "2009",
     copy: "The restaurant relocated within the same street into a reconstructed, authentic 1896 wooden farmhouse imported from Vietnam.",
     photo: {
-      // Copied into heritage/ rather than referenced in place: the
-      // "Interor+exterior" folder's "+" is decoded as a space by the local
-      // image optimizer, so those paths 400 under `next start` even though
-      // Vercel serves them. A clean name keeps this verifiable offline.
+      // A copy sized for this frame rather than the 4000px original the
+      // dining-room scenes draw on — the timeline's prints are small.
       src: "/web_assets/heritage/villa-photograph-wall.jpg",
       width: 1280,
       height: 1600,
@@ -238,6 +237,9 @@ export default function SceneHouseRemembers() {
           </ol>
         </div>
       </div>
+
+      {/* Outside the timeline's measure: the wall is wider than the column */}
+      <HouseArchive />
     </section>
   );
 }

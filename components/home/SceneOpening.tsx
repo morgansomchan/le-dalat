@@ -13,9 +13,9 @@ gsap.registerPlugin(ScrollTrigger);
  * logo overlays them.)
  */
 const HERO_IMAGE =
-  "/web_assets/Interor+exterior/Copy of Le Dalat_20Oct20250002.JPG";
+  "/web_assets/interior-exterior/Copy of Le Dalat_20Oct20250002.JPG";
 const THRESHOLD_IMAGE =
-  "/web_assets/Interor+exterior/Copy of Le Dalat_20Oct20253072.jpg";
+  "/web_assets/interior-exterior/Copy of Le Dalat_20Oct20253072.jpg";
 
 /**
  * Scenes 1 + 2 — Arrival and The threshold (design_brief.md §3).
