@@ -18,22 +18,28 @@ const nextConfig: NextConfig = {
         permanent: true, // 308 — tells search engines to consolidate, not to keep both
       },
       /**
-       * Short share links for bios and profiles: www.ledalat.com/line reads
-       * cleaner than a query string and still tells the monthly report where
-       * the booking came from. lib/attribution.ts saves the tag, then tidies
-       * it out of the address bar. Temporary (307), so a link can be repointed
-       * later without browsers remembering the old target.
+       * Short share links, counted by the page they open. Every link under
+       * /reserve/ opens the booking flow and labels the booking
+       * "<source>-reserve" (www.ledalat.com/reserve/google is Google's
+       * reservation link, /reserve/ig is Instagram's). A plain visit to the
+       * homepage carries no tag; the referrer decides, as for any page.
+       * lib/attribution.ts saves the tag, then tidies it out of the address
+       * bar. Temporary (307), so a link can be repointed later.
+       *
+       * Older links stay working: /google, /line, /fb and /reservation/google
+       * open booking with the same labels, and /ig opens the homepage.
        */
       ...(
         [
-          // Instagram's bio has two links, counted apart: /ig opens the
-          // homepage; /reserve (app/reserve/page.tsx) opens the booking flow.
+          ["reserve/ig", "/reservation?src=instagram-reserve"],
+          ["reserve/google", "/reservation?src=google-reserve"],
+          ["reserve/line", "/reservation?src=line-reserve"],
+          ["reserve/fb", "/reservation?src=facebook-reserve"],
+          ["reservation/google", "/reservation?src=google-reserve"],
+          ["google", "/reservation?src=google-reserve"],
+          ["line", "/reservation?src=line-reserve"],
+          ["fb", "/reservation?src=facebook-reserve"],
           ["ig", "/?src=instagram-home"],
-          ["line", "/reservation?src=line"],
-          ["google", "/reservation?src=google"],
-          // Google Business's reservation button reads better with the word in it.
-          ["reservation/google", "/reservation?src=google"],
-          ["fb", "/reservation?src=facebook"],
         ] as const
       ).map(([path, destination]) => ({
         source: `/${path}`,
