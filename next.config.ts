@@ -31,6 +31,8 @@ const nextConfig: NextConfig = {
           ["ig", "/?src=instagram-home"],
           ["line", "/reservation?src=line"],
           ["google", "/reservation?src=google"],
+          // Google Business's reservation button reads better with the word in it.
+          ["reservation/google", "/reservation?src=google"],
           ["fb", "/reservation?src=facebook"],
         ] as const
       ).map(([path, destination]) => ({
