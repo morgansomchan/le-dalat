@@ -18,7 +18,7 @@ const nextConfig: NextConfig = {
         permanent: true, // 308 — tells search engines to consolidate, not to keep both
       },
       /**
-       * Short share links for bios and profiles: www.ledalat.com/ig reads
+       * Short share links for bios and profiles: www.ledalat.com/line reads
        * cleaner than a query string and still tells the monthly report where
        * the booking came from. lib/attribution.ts saves the tag, then tidies
        * it out of the address bar. Temporary (307), so a link can be repointed
@@ -26,14 +26,16 @@ const nextConfig: NextConfig = {
        */
       ...(
         [
-          ["ig", "instagram"],
-          ["line", "line"],
-          ["google", "google"],
-          ["fb", "facebook"],
+          // Instagram's bio has two links, counted apart: /ig opens the
+          // homepage; /reserve (app/reserve/page.tsx) opens the booking flow.
+          ["ig", "/?src=instagram-home"],
+          ["line", "/reservation?src=line"],
+          ["google", "/reservation?src=google"],
+          ["fb", "/reservation?src=facebook"],
         ] as const
-      ).map(([path, src]) => ({
+      ).map(([path, destination]) => ({
         source: `/${path}`,
-        destination: `/reservation?src=${src}`,
+        destination,
         permanent: false,
       })),
     ];

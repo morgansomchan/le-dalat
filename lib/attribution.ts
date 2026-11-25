@@ -5,8 +5,10 @@
  * the visit, and handed to create_reservation so the monthly report can
  * count LINE, Google, Instagram and Facebook bookings.
  *
- * Share links carry it explicitly. The short links /ig, /line, /google and
- * /fb (next.config.ts) redirect to /reservation?src=..., and src, ref or
+ * Share links carry it explicitly. The short links /line, /google and /fb
+ * (next.config.ts) open /reservation tagged; Instagram's /ig opens the
+ * homepage as "instagram-home" and /reserve the booking flow as
+ * "instagram-reserve". src, ref or
  * utm_source on any page work too. Once read, those tags are tidied out of
  * the address bar so a guest who copies the link doesn't pass the tag on. Without a tag, the referrer's host is a fair
  * second guess; with neither, the visit is "direct".
