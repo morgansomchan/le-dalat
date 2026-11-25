@@ -17,6 +17,25 @@ const nextConfig: NextConfig = {
         destination: "https://www.ledalat.com/:path*",
         permanent: true, // 308 — tells search engines to consolidate, not to keep both
       },
+      /**
+       * Short share links for bios and profiles: www.ledalat.com/ig reads
+       * cleaner than a query string and still tells the monthly report where
+       * the booking came from. lib/attribution.ts saves the tag, then tidies
+       * it out of the address bar. Temporary (307), so a link can be repointed
+       * later without browsers remembering the old target.
+       */
+      ...(
+        [
+          ["ig", "instagram"],
+          ["line", "line"],
+          ["google", "google"],
+          ["fb", "facebook"],
+        ] as const
+      ).map(([path, src]) => ({
+        source: `/${path}`,
+        destination: `/reservation?src=${src}`,
+        permanent: false,
+      })),
     ];
   },
 };

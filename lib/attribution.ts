@@ -5,8 +5,10 @@
  * the visit, and handed to create_reservation so the monthly report can
  * count LINE, Google, Instagram and Facebook bookings.
  *
- * Share links carry it explicitly: https://www.ledalat.com/reservation?src=line
- * (utm_source works too). Without a tag, the referrer's host is a fair
+ * Share links carry it explicitly. The short links /ig, /line, /google and
+ * /fb (next.config.ts) redirect to /reservation?src=..., and src, ref or
+ * utm_source on any page work too. Once read, those tags are tidied out of
+ * the address bar so a guest who copies the link doesn't pass the tag on. Without a tag, the referrer's host is a fair
  * second guess; with neither, the visit is "direct".
  *
  * Works on any page, not only /reservation: a guest can land on the homepage
@@ -75,6 +77,26 @@ export function captureAttribution(): void {
     localStorage.setItem(KEY, JSON.stringify(value));
   } catch {
     /* storage blocked: the booking still goes through, unlabelled */
+  }
+  tidyUrl();
+}
+
+const TAG_KEYS = ["src", "ref", ...UTM_KEYS];
+
+/** Drop the tracking tags from the address bar, keeping every other param. */
+function tidyUrl(): void {
+  try {
+    const url = new URL(location.href);
+    let changed = false;
+    for (const k of TAG_KEYS) {
+      if (url.searchParams.has(k)) {
+        url.searchParams.delete(k);
+        changed = true;
+      }
+    }
+    if (changed) history.replaceState(history.state, "", url.pathname + url.search + url.hash);
+  } catch {
+    /* cosmetic only */
   }
 }
 
