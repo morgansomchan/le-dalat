@@ -9,16 +9,22 @@
  * (utm_source works too). Without a tag, the referrer's host is a fair
  * second guess; with neither, the visit is "direct".
  *
- * First touch wins for the session. Storage can be blocked (private mode,
- * in-app browsers), so every access is guarded and a failure only costs the
- * label, never the booking.
+ * Works on any page, not only /reservation: a guest can land on the homepage
+ * from Instagram, wander, and book days later. The label is kept for 30 days
+ * on this device. A tagged visit (src/utm/referrer) replaces an older label;
+ * a plain direct visit never overwrites one. Storage can be blocked (private
+ * mode, in-app browsers), so every access is guarded and a failure only
+ * costs the label, never the booking.
  */
 
 const KEY = "ld_attribution";
+const TTL_MS = 30 * 24 * 60 * 60 * 1000;
 
 export interface Attribution {
   source: string;
   utm: Record<string, string> | null;
+  /** epoch ms when captured */
+  at?: number;
 }
 
 const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
@@ -48,21 +54,25 @@ function fromReferrer(ref: string): string | null {
 /** Read the landing URL once per session. Safe to call on every page. */
 export function captureAttribution(): void {
   try {
-    if (sessionStorage.getItem(KEY)) return;
     const params = new URLSearchParams(location.search);
     const utm: Record<string, string> = {};
     for (const k of UTM_KEYS) {
       const v = params.get(k);
       if (v) utm[k] = v.slice(0, 100);
     }
-    const source =
+    const tagged =
       clean(params.get("src")) ??
       clean(params.get("ref")) ??
       clean(params.get("utm_source")) ??
-      fromReferrer(document.referrer) ??
-      "direct";
-    const value: Attribution = { source, utm: Object.keys(utm).length ? utm : null };
-    sessionStorage.setItem(KEY, JSON.stringify(value));
+      fromReferrer(document.referrer);
+    // An untagged visit keeps whatever label is already on this device.
+    if (!tagged && readAttribution()) return;
+    const value: Attribution = {
+      source: tagged ?? "direct",
+      utm: Object.keys(utm).length ? utm : null,
+      at: Date.now(),
+    };
+    localStorage.setItem(KEY, JSON.stringify(value));
   } catch {
     /* storage blocked: the booking still goes through, unlabelled */
   }
@@ -70,8 +80,14 @@ export function captureAttribution(): void {
 
 export function readAttribution(): Attribution | null {
   try {
-    const raw = sessionStorage.getItem(KEY);
-    return raw ? (JSON.parse(raw) as Attribution) : null;
+    const raw = localStorage.getItem(KEY);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as Attribution;
+    if (!value.at || Date.now() - value.at > TTL_MS) {
+      localStorage.removeItem(KEY);
+      return null;
+    }
+    return value;
   } catch {
     return null;
   }
