@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Jost } from "next/font/google";
 import "./globals.css";
+import AttributionCapture from "@/components/AttributionCapture";
 
 /**
  * Typography (design_brief.md §4):
@@ -37,7 +38,10 @@ export default function RootLayout({
       lang="en-US"
       className={`${fraunces.variable} ${jost.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AttributionCapture />
+        {children}
+      </body>
     </html>
   );
 }

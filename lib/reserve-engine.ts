@@ -129,8 +129,11 @@ export async function createReservation(args: {
   email: string | null;
   note: string | null;
   seatingPref: string | null;
+  source?: string | null;
+  utm?: Record<string, string> | null;
+  heardVia?: string | null;
 }): Promise<CreateResult> {
-  const { data, error } = await db().rpc("create_reservation", {
+  const base = {
     p_date: args.date,
     p_time: args.time,
     p_party: args.party,
@@ -140,7 +143,19 @@ export async function createReservation(args: {
     p_channel: "web",
     p_note: args.note,
     p_seating_pref: args.seatingPref,
-  });
+  };
+  const tagged = {
+    ...base,
+    p_source: args.source ?? null,
+    p_utm: args.utm ?? null,
+    p_heard_via: args.heardVia ?? null,
+  };
+  let { data, error } = await db().rpc("create_reservation", tagged);
+  // Until the booking-source migration is live the engine has no such
+  // params (PGRST202). A label is never worth a lost table: book untagged.
+  if (error?.code === "PGRST202") {
+    ({ data, error } = await db().rpc("create_reservation", base));
+  }
   if (error) throw new Error(error.message);
   return data as CreateResult;
 }

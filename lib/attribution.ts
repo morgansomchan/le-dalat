@@ -1,0 +1,78 @@
+"use client";
+
+/**
+ * Where did this guest find the house? Captured once, on the first page of
+ * the visit, and handed to create_reservation so the monthly report can
+ * count LINE, Google, Instagram and Facebook bookings.
+ *
+ * Share links carry it explicitly: https://www.ledalat.com/reservation?src=line
+ * (utm_source works too). Without a tag, the referrer's host is a fair
+ * second guess; with neither, the visit is "direct".
+ *
+ * First touch wins for the session. Storage can be blocked (private mode,
+ * in-app browsers), so every access is guarded and a failure only costs the
+ * label, never the booking.
+ */
+
+const KEY = "ld_attribution";
+
+export interface Attribution {
+  source: string;
+  utm: Record<string, string> | null;
+}
+
+const UTM_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term"];
+
+function clean(v: string | null): string | null {
+  if (!v) return null;
+  const s = v.toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 32);
+  return s || null;
+}
+
+function fromReferrer(ref: string): string | null {
+  let host: string;
+  try {
+    host = new URL(ref).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  if (host === "www.ledalat.com" || host === "ledalat.com" || host === location.hostname) return null;
+  if (/(^|\.)line\.me$|(^|\.)line-apps\.com$/.test(host)) return "line";
+  if (/(^|\.)google\./.test(host)) return "google";
+  if (/(^|\.)instagram\.com$/.test(host)) return "instagram";
+  if (/(^|\.)(facebook\.com|fb\.com|messenger\.com)$/.test(host)) return "facebook";
+  if (/(^|\.)tripadvisor\./.test(host)) return "tripadvisor";
+  return "referral";
+}
+
+/** Read the landing URL once per session. Safe to call on every page. */
+export function captureAttribution(): void {
+  try {
+    if (sessionStorage.getItem(KEY)) return;
+    const params = new URLSearchParams(location.search);
+    const utm: Record<string, string> = {};
+    for (const k of UTM_KEYS) {
+      const v = params.get(k);
+      if (v) utm[k] = v.slice(0, 100);
+    }
+    const source =
+      clean(params.get("src")) ??
+      clean(params.get("ref")) ??
+      clean(params.get("utm_source")) ??
+      fromReferrer(document.referrer) ??
+      "direct";
+    const value: Attribution = { source, utm: Object.keys(utm).length ? utm : null };
+    sessionStorage.setItem(KEY, JSON.stringify(value));
+  } catch {
+    /* storage blocked: the booking still goes through, unlabelled */
+  }
+}
+
+export function readAttribution(): Attribution | null {
+  try {
+    const raw = sessionStorage.getItem(KEY);
+    return raw ? (JSON.parse(raw) as Attribution) : null;
+  } catch {
+    return null;
+  }
+}

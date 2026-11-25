@@ -21,6 +21,7 @@ import {
   onlineRules,
   normalizePhone,
 } from "@/lib/reserve-engine";
+import { readAttribution } from "@/lib/attribution";
 
 /**
  * GATE 5B — the blessed daylight flow, wired to the real engine. The
@@ -110,6 +111,7 @@ export default function ReserveFlow({
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [note, setNote] = useState("");
+  const [heardVia, setHeardVia] = useState("");
   const [touched, setTouched] = useState<{ [k: string]: boolean }>({});
   const [settingTable, setSettingTable] = useState(false);
   const [submitError, setSubmitError] = useState(false);
@@ -279,6 +281,9 @@ export default function ReserveFlow({
           email: email.trim() || null,
           note: note.trim() || null,
           seatingPref,
+          source: readAttribution()?.source ?? null,
+          utm: readAttribution()?.utm ?? null,
+          heardVia: heardVia || null,
         });
         if (result.success) {
           setReference(`LD-${result.reservation_id.slice(-4).toUpperCase()}`);
@@ -897,6 +902,29 @@ export default function ReserveFlow({
                   placeholder="Allergies, occasions, a favourite corner…"
                   className="mt-1.5 w-full border-b border-navy/25 bg-transparent pb-2 font-serif text-lg text-navy placeholder:font-sans placeholder:text-[0.8125rem] placeholder:text-navy/35 focus:border-navy/70 focus:outline-none"
                 />
+              </label>
+
+              <label className="mt-7 block">
+                <span className="font-sans text-[0.625rem] tracking-[0.25em] uppercase text-navy/60">
+                  How you found the house{" "}
+                  <span className="tracking-normal normal-case text-navy/40">· optional</span>
+                </span>
+                <select
+                  value={heardVia}
+                  onChange={(e) => setHeardVia(e.target.value)}
+                  className={`mt-1.5 w-full appearance-none border-b border-navy/25 bg-transparent pb-2 font-serif text-lg focus:border-navy/70 focus:outline-none ${
+                    heardVia ? "text-navy" : "text-navy/35"
+                  }`}
+                >
+                  <option value="">Choose one</option>
+                  <option value="google">Google</option>
+                  <option value="instagram">Instagram</option>
+                  <option value="facebook">Facebook</option>
+                  <option value="line">LINE</option>
+                  <option value="friend">A friend or family</option>
+                  <option value="returning">I have dined here before</option>
+                  <option value="other">Somewhere else</option>
+                </select>
               </label>
 
               {submitError && (
