@@ -2,9 +2,9 @@ import { redirect } from "next/navigation";
 
 /**
  * The flow's old address — forward saved links to /reservation with the
- * handoff params intact. It is also the Instagram bio's booking link, so an
- * untagged visit is counted as "instagram-reserve" (an explicit src, ref or
- * utm_source on the link wins).
+ * handoff params intact. It was the Instagram bio's booking link before
+ * /reserve/ig, so an untagged visit still counts as "instagram-reserve"
+ * (an explicit src, ref or utm_source on the link wins).
  */
 export default async function ReserveRedirect({
   searchParams,
